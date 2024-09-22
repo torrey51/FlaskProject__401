@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}My Site{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- CSS Styling -->
+    <style>
+
+      /* Forces he html and body elements to take up the full heigth */
+        html, body {
+          height: 100%;
+          margin: 0;
+        }
+
+        /* Flexbox container pushes the footer to the bottom of the page */
+        body {
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Allows the main element to grow and take up free space */
+        main {
+          flex: 1;
+        }
+        
+        /* CSS for the footer element*/
+        .bg-custom{
+          background-color: black;
+          color: white;
+        }
+        
+        /* CSS for the title of page  */
+       .booth1{
+          font-weight: bold;
+       }
+
+      /* CSS for the header*/
+       .custom-bg {
+        background-color: black;
+       }
+
+      /* CSS for the nav bar in the header */
+      .custom-navbar-bg {
+        background-color: black;
+        justify-content: center;
+      }
+      
+      /* CSS for the navbar a elements */
+      .custom-navbar-bg .navbar-brand{
+        color: white;
+        font-weight: bold;
+      }
+
+      /* CSS for when hovering over the navbar a elements */
+      .custom-navbar-bg .navbar-brand:hover{
+        color: #00c805;
+      }
+
+      /* CSS for the toggle when in smaller screen */
+      .custom-toggle {
+        background-color: black !important;
+      }
+
+      /* CSS for when the toggle is opened */
+      .custom-toggle-nav {
+        background-color: black !important;
+      }
+
+      /* CSS for the toggle nav a elements */
+      .custom-toggle-nav a{
+        text-decoration: none;
+        color:white;
+        font-weight: bold;
+      }
+
+      /* CSS for the toggle nav a elements when hovered */
+      .custom-toggle-nav a:hover{
+        color:#00c805;
+      }
+
+    </style>
+
+  </head>
+  <body>
+    <!-- Navbar for desktop version of website -->
+     <!-- Navbar was taken from bootstrap https://getbootstrap.com/docs/4.0/components/navbar/-->
+    <header class="custom-bg text-white text-center py-3">
+      <h1 class="booth1">Stock Trading Website</h1>
+      <nav class="navbar navbar-expand-lg navbar-light custom-navbar-bg d-none d-lg-flex">
+        <a class="navbar-brand" href="{{ url_for('home')}}">Home</a>
+        <a class="navbar-brand" href="{{ url_for('about')}}">About</a>
+        <a class="navbar-brand" href="{{ url_for('contact')}}">Contact</a>
+      </nav>
+
+      <!-- Toggle button navbar that only shows on smaller displays -->
+       <!-- Toggle navbar was taken from bootstrap https://getbootstrap.com/docs/4.0/components/navbar/-->
+      <div class="d-block d-lg-none">
+        <div class="collapse" id="navbarToggleExternalContent">
+          <div class="bg-dark p-4 custom-toggle-nav">
+            <a class="navbar-brand" href="{{ url_for('home')}}">Home</a>
+            <a class="navbar-brand" href="{{ url_for('about')}}">About</a>
+            <a class="navbar-brand" href="{{ url_for('contact')}}">Contact</a>
+          </div>
+        </div>
+
+        <nav class="navbar navbar-dark bg-dark custom-toggle">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </nav>
+      </div>
+
+    </header>
+
+    
+    <main class="container mt-4">{% block content %}{% endblock %}</main>
+    <footer class="bg-custom text-center py-3">
+      <p>Stock Trading Website Footer</p>
+    </footer>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
+
