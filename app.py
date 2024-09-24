@@ -3,8 +3,6 @@ app= Flask(__name__)
 
 
 #route 1 (page 1) #Home
-from flask import Flask, render_template
-app = Flask(__name__)
 @app.route('/')
 def home():
     return render_template('home.html')
