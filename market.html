@@ -1,0 +1,163 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content
+  %}
+  
+  <style>
+    /* CSS for the grid */
+    .container {
+      color: white;
+    }
+  
+    /* CSS for columns in the grid */
+    .col-3, .col-4{
+      border: 1px solid;
+      text-align: center;
+      font-weight: bold;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+  
+    /* CSS for the title above the grid */
+    h1 {
+      text-align: center;
+      color: white;
+      font-weight: bold;
+    }
+  
+    /* CSS for the title column in the grid */
+    #title {
+      background-color: #00c805;
+      color: black;
+      border: none;
+      border-radius: 15px 15px 0px 0px;
+    }
+  
+    /* CSS for the body of the webpage */
+    body {
+      background-color: black;
+    }
+  
+    /* Purchase button cell CSS */
+    .Purchase-cell {
+      padding: 0px;
+      max-width: 1000px;
+      border: none;
+    }
+  
+    /* Purchase Button CSS */
+    .Purchase-button{
+      background: black;
+      color: white;
+      width: 100%;
+      height: 100%;
+      border: solid white 1px;
+      border-radius: 0px;
+    }
+  
+    /* Purchase Button CSS for when the button is hovered */
+    .Purchase-button:hover{
+      background-color: #00c805;
+    }
+  
+  
+  
+  </style>
+  
+  <script>
+    
+    // Bootstrap JavaScript for making the popup menu and adding an event listner for when it is clicked
+    document.addEventListener('DOMContentLoaded', function () {
+      const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+      const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    });
+  </script>
+  <h1>Stock Market</h1>
+  
+  <!-- Grid system used from bootstrap https://getbootstrap.com/docs/5.3/layout/grid/ -->
+    <div class="row">
+      <div class="col-3" id="title">Stock</div>
+      <div class="col-3" id="title">Market Price</div>
+      <div class="col-3" id="title">Market Cap</div>
+    </div>
+  
+    <div class="row">
+      <div class="col-3">NVDA</div>
+      <div class="col-3">$108.10</div>
+      <div class="col-3">$2.65T</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+    </div>
+  
+    <div class="row">
+      <div class="col-3">AAPL</div>
+      <div class="col-3">$220.11</div>
+      <div class="col-3">$3.358T</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">MSFT</div>
+      <div class="col-3">$423.04</div>
+      <div class="col-3">$3.144T</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">GOOG</div>
+      <div class="col-3">$152.15</div>
+      <div class="col-3">$1.864T</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">META</div>
+      <div class="col-3">$511.83</div>
+      <div class="col-3">$1.294T</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">TSLA</div>
+      <div class="col-3">$228.13</div>
+      <div class="col-3">$728.79B</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">WMT</div>
+      <div class="col-3">$78.84</div>
+      <div class="col-3">$633.73B</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">JPM</div>
+      <div class="col-3">$207.23</div>
+      <div class="col-3">$589.60B</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">COST</div>
+      <div class="col-3">$900.40</div>
+      <div class="col-3">$399.17B</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+    <div class="row">
+      <div class="col-3">NFLX</div>
+      <div class="col-3">$681.47</div>
+      <div class="col-3">$292.46B</div>
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+  
+    </div>
+  
+  </div>
+  
+  {% endblock %}

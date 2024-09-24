@@ -7,6 +7,8 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
+    
+
     <!-- CSS Styling -->
     <style>
 
@@ -92,8 +94,9 @@
       <h1 class="booth1">Stock Trading Website</h1>
       <nav class="navbar navbar-expand-lg navbar-light custom-navbar-bg d-none d-lg-flex">
         <a class="navbar-brand" href="{{ url_for('home')}}">Home</a>
-        <a class="navbar-brand" href="{{ url_for('about')}}">About</a>
-        <a class="navbar-brand" href="{{ url_for('contact')}}">Contact</a>
+        <a class="navbar-brand" href="{{ url_for('portfolio')}}">Portfolio</a>
+        <a class="navbar-brand" href="{{ url_for('market')}}">Market</a>
+        <a class="navbar-brand" href="{{ url_for('account')}}">Account</a>
       </nav>
 
       <!-- Toggle button navbar that only shows on smaller displays -->
@@ -102,8 +105,9 @@
         <div class="collapse" id="navbarToggleExternalContent">
           <div class="bg-dark p-4 custom-toggle-nav">
             <a class="navbar-brand" href="{{ url_for('home')}}">Home</a>
-            <a class="navbar-brand" href="{{ url_for('about')}}">About</a>
-            <a class="navbar-brand" href="{{ url_for('contact')}}">Contact</a>
+            <a class="navbar-brand" href="{{ url_for('portfolio')}}">About</a>
+            <a class="navbar-brand" href="{{ url_for('market')}}">Market</a>
+            <a class="navbar-brand" href="{{ url_for('account')}}">Account</a>
           </div>
         </div>
 
@@ -127,4 +131,3 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
-
