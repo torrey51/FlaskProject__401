@@ -57,19 +57,20 @@
     .Purchase-button:hover{
       background-color: #00c805;
     }
+
+    .modal-title{
+      color: black;
+    }
+
+    .modal-body {
+      color: black;
+    }
   
   
   
   </style>
   
-  <script>
-    
-    // Bootstrap JavaScript for making the popup menu and adding an event listner for when it is clicked
-    document.addEventListener('DOMContentLoaded', function () {
-      const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-      const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-    });
-  </script>
+
   <h1>Stock Market</h1>
   
   <!-- Grid system used from bootstrap https://getbootstrap.com/docs/5.3/layout/grid/ -->
@@ -83,79 +84,285 @@
       <div class="col-3">NVDA</div>
       <div class="col-3">$108.10</div>
       <div class="col-3">$2.65T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
+      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+            <!-- Modal -->
+      <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul>
+                {% for stock in stocks %}
+                <li>{{ stock.company_name }} ({{ stock.initial_price }})</li>
+                {% else %}
+                <li>No Stocks found</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary">Purchase</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   
     <div class="row">
       <div class="col-3">AAPL</div>
       <div class="col-3">$220.11</div>
       <div class="col-3">$3.358T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+              <!-- Modal -->
+        <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>test</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Purchase</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>    
     </div>
   
     <div class="row">
       <div class="col-3">MSFT</div>
       <div class="col-3">$423.04</div>
       <div class="col-3">$3.144T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+              <!-- Modal -->
+        <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>test</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Purchase</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">GOOG</div>
       <div class="col-3">$152.15</div>
       <div class="col-3">$1.864T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">META</div>
       <div class="col-3">$511.83</div>
       <div class="col-3">$1.294T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">TSLA</div>
       <div class="col-3">$228.13</div>
       <div class="col-3">$728.79B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">WMT</div>
       <div class="col-3">$78.84</div>
       <div class="col-3">$633.73B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">JPM</div>
       <div class="col-3">$207.23</div>
       <div class="col-3">$589.60B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">COST</div>
       <div class="col-3">$900.40</div>
       <div class="col-3">$399.17B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
     <div class="row">
       <div class="col-3">NFLX</div>
       <div class="col-3">$681.47</div>
       <div class="col-3">$292.46B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="popover" data-bs-title="Stock Title" data-bs-content="Add form here eventually">Purchase</button></div>
-  
+      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+
+                <!-- Modal -->
+          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>test</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary">Purchase</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>  
     </div>
   
   </div>
