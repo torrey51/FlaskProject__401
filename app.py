@@ -26,7 +26,6 @@ class Stock(db.Model):
 
 # Flask-WTF form for handling user input
 class StockForm(FlaskForm):
-    stock_id = StringField('stock_id', validators=[DataRequired()])
     company_name = StringField('Name', validators=[DataRequired()])
     ticker_symbol = StringField('ticker_symbol',validators=[DataRequired()])
     initial_price = StringField('initial_price',validators=[DataRequired()])
@@ -58,7 +57,6 @@ def admin_market():
     if form.validate_on_submit():
         # Create a new Stock object using form data
         new_stock = Stock(
-            stock_id=form.stock_id.data,
             company_name=form.company_name.data,
             ticker_symbol=form.ticker_symbol.data,
             initial_price=float(form.initial_price.data),
