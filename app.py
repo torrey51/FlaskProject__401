@@ -14,7 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Creating a Stock
+# Creating a Stock table
 class Stock(db.Model):
     stock_id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(80), nullable=False)
@@ -24,7 +24,7 @@ class Stock(db.Model):
     volume = db.Column(db.Float, nullable=False)
 
 
-# Flask-WTF form for handling user input
+# Flask-WTF form for handling user input for stocks
 class StockForm(FlaskForm):
     company_name = StringField('Name', validators=[DataRequired()])
     ticker_symbol = StringField('ticker_symbol',validators=[DataRequired()])
@@ -32,6 +32,23 @@ class StockForm(FlaskForm):
     current_price = StringField('current_price',validators=[DataRequired()])
     volume = StringField('volume',validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+
+# Creating a market hours table
+class Hours(db.Model):
+    hour_id = db.Column(db.Integer, primary_key=True)
+    open_day = db.Column(db.String(9), nullable=False)
+    close_day = db.Column(db.String(9), nullable=False)
+    open_hour = db.Column(db.Float, nullable=False)
+    close_hour = db.Column(db.Float, nullable=False)
+
+# Flask-WTF form for handling user input for chaning market hours
+class HoursForm(FlaskForm):
+    open_day = StringField('open_day', validators=[DataRequired()])
+    close_day = StringField('close_day', validators=[DataRequired()])
+    open_hour = StringField('open_hour', validators=[DataRequired()])
+    close_hour = StringField('close_hour', validators=[DataRequired()])
+    submit = SubmitField('submit')
 
 #route 1 (page 1) #Home
 @app.route('/')
@@ -41,21 +58,39 @@ def home():
 #route 2 (page 2) #market
 @app.route('/market')
 def market():   
-    contact = request.args.get('market')
     db.create_all()
-    # Creating a stock in the stock database
-    # new_stock = Stock(company_name='NVIDIA Corp', ticker_symbol='NVDA', initial_price=108.10, current_price=108.10, volume=262664898)
-    # db.session.add(new_stock)
-    # db.session.commit()
     stocks = Stock.query.all()
-    return render_template('market.html', stocks=stocks)
+    last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
+    return render_template('market.html', stocks=stocks, last_hour=last_hour)
 
-#Route for the admin market page
+#Buying Stock
+@app.route("/buy-stock/<int:id>", methods=["GET", "POST"])
+def buy_stock(id):
+    stock = Stock.query.get_or_404(id)
+    form = StockForm(obj=stock)
+    if form.validate_on_submit():
+        stock.company_name = form.company_name.data
+        stock.ticker_symbol = form.ticker_symbol.data
+        stock.initial_price = float(form.initial_price.data)
+        stock.current_price = float(form.current_price.data)
+        stock.volume = float(form.volume.data)
+        db.session.commit()
+        flash('Stock Purchase successfull!')
+        return redirect(url_for('market'))
+    return render_template("buy_stock.html", form=form, stock=stock)
+
+#Route 3 for the admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
 def admin_market():
+    stocks = Stock.query.all()
+    last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
+    return render_template("admin_market.html", stocks=stocks, last_hour=last_hour)
+
+#Adding Stock
+@app.route("/add-stock", methods=["GET", "POST"])
+def add_stock():
     form = StockForm()
     if form.validate_on_submit():
-        # Create a new Stock object using form data
         new_stock = Stock(
             company_name=form.company_name.data,
             ticker_symbol=form.ticker_symbol.data,
@@ -63,16 +98,53 @@ def admin_market():
             current_price=float(form.current_price.data),
             volume=float(form.volume.data)
         )
-
-        # Add new stock to the database
         db.session.add(new_stock)
         db.session.commit()
+        flash('Stock addes successfully!')
+        return redirect(url_for('admin_market'))
+    return render_template("add_stock.html", form=form)
 
-        flash('Stock added successfully!')
-        return redirect(url_for('admin_market'))  # Redirect after success
+#Deleting Stock
+@app.route("/delete-stock/<int:id>")
+def delete_stock(id):
+    stock = Stock.query.get_or_404(id)
+    db.session.delete(stock)
+    db.session.commit()
+    flash('Stock deleted sucessfully!')
+    return redirect(url_for('admin_market'))
 
-    return render_template('admin_market.html', form=form)
+#Update Stock
+@app.route("/update-stock/<int:id>", methods=["GET", "POST"])
+def update_stock(id):
+    stock = Stock.query.get_or_404(id)
+    form = StockForm(obj=stock)
+    if form.validate_on_submit():
+        stock.company_name = form.company_name.data
+        stock.ticker_symbol = form.ticker_symbol.data
+        stock.initial_price = float(form.initial_price.data)
+        stock.current_price = float(form.current_price.data)
+        stock.volume = float(form.volume.data)
+        db.session.commit()
+        flash('Stock Updated successfully!')
+        return redirect(url_for('admin_market'))
+    return render_template("update_stock.html", form=form, stock=stock)
 
+#Adding Market Hours
+@app.route("/change-market-hours", methods=["GET", "POST"])
+def change_hours():
+    form = HoursForm()
+    if form.validate_on_submit():
+        new_schedule = Hours(
+            open_day=form.open_day.data,
+            close_day=form.close_day.data,
+            open_hour=int(form.open_hour.data),
+            close_hour=int(form.close_hour.data)
+        )
+        db.session.add(new_schedule)
+        db.session.commit()
+        flash('Market hours added successfully!')
+        return redirect(url_for('admin_market'))
+    return render_template("change_market_hours.html", form=form)
 
 #route 3 (page 3) #about
 @app.route('/portfolio')

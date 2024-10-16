@@ -1,0 +1,81 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content%}
+
+<style>
+  /* CSS for the background of the webpage */
+  body {
+      background-color: black;
+  }
+  h1 {
+      color: white;
+      font-weight: bold;
+  }
+  /* CSS for the adjusting the entire form */
+  .form-container {
+      display: flex;
+      justify-content: center;
+  }
+
+  /* CSS for the titles above the form input fields */
+  .form-title {
+      color: white;
+      font-weight: bold;
+  }
+
+  /* CSS for the title of the update stock page */
+  h1 {
+      text-align: center;
+  }
+
+  /* CSS for the submit button */
+  .submit {
+      font-weight: bold;
+  }
+
+  /* CSS for the submit button when it is hovered */
+  .submit:hover{ 
+      background-color: #00c805;
+  }
+
+  /* CSS for the back to admin stock market hyperlink button */
+  .admin{
+      text-decoration: none;
+      border: solid;
+      border-radius: 25px;
+      padding: 5px;
+      background-color:#00c805; 
+      color: black;
+      font-weight: bold;
+  }
+
+  /* CSS for when the back to admin stock market hyperlinked is hovered */
+  .admin:hover {
+      background-color:black; 
+      border-color: white;
+      color: white;
+  }
+
+  /* CSS for the p element that contains the admin back button */
+  .admin-back{
+      padding-top: 30px;
+      text-align: center;
+  }
+
+</style>
+
+<body>
+    <h1>Add Stock</h1>
+    <div class="form-container">
+      <form method="POST" action=""> 
+        {{ form.hidden_tag() }} 
+        <p class="form-title">{{ form.company_name.label }}<br>{{ form.company_name() }}</p>
+        <p class="form-title">{{ form.ticker_symbol.label }}<br>{{ form.ticker_symbol() }}</p>
+        <p class="form-title">{{ form.initial_price.label }}<br>{{ form.initial_price() }}</p>
+        <p class="form-title">{{ form.current_price.label }}<br>{{ form.current_price() }}</p>
+        <p class="form-title">{{ form.volume.label }}<br>{{ form.volume() }}</p>
+        <p class="form-title">{{ form.submit() }}</p>
+      </form>
+    </div>
+    <p class="admin-back"><a class="admin" href="{{ url_for('admin_market') }}">Back to admin market</a></p>
+  </body>
+
+{% endblock %}
