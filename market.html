@@ -2,369 +2,143 @@
   %}
   
   <style>
-    /* CSS for the grid */
-    .container {
-      color: white;
-    }
-  
-    /* CSS for columns in the grid */
-    .col-3, .col-4{
-      border: 1px solid;
-      text-align: center;
-      font-weight: bold;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-  
-    /* CSS for the title above the grid */
-    h1 {
-      text-align: center;
-      color: white;
-      font-weight: bold;
-    }
-  
-    /* CSS for the title column in the grid */
-    #title {
-      background-color: #00c805;
-      color: black;
-      border: none;
-      border-radius: 15px 15px 0px 0px;
-    }
-  
-    /* CSS for the body of the webpage */
+    /* CSS to change body of the admin market page*/
     body {
       background-color: black;
     }
-  
-    /* Purchase button cell CSS */
-    .Purchase-cell {
-      padding: 0px;
-      max-width: 200px;
-      border: none;
+    /* CSS for the admin stock market title, alinging in the center and bolding */
+    h1 {
+      text-align: center;
+      font-weight: bold;
+      color: white;
     }
-  
-    /* Purchase Button CSS */
-    .Purchase-button{
-      background: black;
+
+    table {
       color: white;
       width: 100%;
       height: 100%;
-      border: solid white 1px;
-      border-radius: 0px;
     }
-  
-    /* Purchase Button CSS for when the button is hovered */
-    .Purchase-button:hover{
+    
+    /* CSS for the titles in the stock markert table */
+    tr th {
+      padding: 10px;
+    }
+
+
+    /* CSS for adding lines in the table */
+    th, td {
+      border: solid white;
+    }
+
+    /* CSS for the rows in the stock market table*/
+    .stock-rows{
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    .table-container {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* CSS for the edit and delete buttons */
+    td a {
+      text-decoration: none;
       background-color: #00c805;
+      display: block;
+      color: black;
+      font-weight: bold;
+      width: 100%;
+      height: 100%;
+      padding: 10px 0px;
+      box-sizing: border-box;
     }
 
-    .modal-title{
-      color: black;
+    /* CSS for when the buy button is hovered */
+    .buy:hover{
+      color: white;
+      background-color: black;
     }
 
-    .modal-body {
-      color: black;
+  
+    /* CSS for the flash message that gets displayed after a stock is changed */
+    .message {
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      list-style-type: none;
     }
-  
-  
-  
+
+    .change-buttons {
+      display: flex;
+      justify-content: center;
+    }
+
+    .market-hours {
+      text-align: center;
+      color:#00c805;
+      font-size: 60px;
+      font-family: Neon_pixel;
+    }
+
+
   </style>
   
+  <body>
+    <h1>Stock Market</h1>
+    {% if last_hour %}
+    <p class="market-hours">Market Hours: {{ last_hour.open_day }}-{{ last_hour.close_day }} {{ last_hour.open_hour }}am-{{ last_hour.close_hour }}pm</p>
+    {% else %}
+    <p>No market hours available</p>
+    {% endif %}
+    <!-- Flashes the messages stated in the app.py file -->
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul> {% for message in messages %}
+      <li class="message">{{ message }}</li>
+      {% endfor %}
+    </ul> {% endif %} {% endwith %}
+    <!-- Container for the stock table -->
+    <div class="table-container">
+      <!-- Table for the stocks, pulls value from the database to populate the table -->
+      <table border="1">
+        <thead>
+          <!-- Table row for the title of the table values -->
+          <tr>
+            <th>Company</th>
+            <th>Ticker</th>
+            <th>Current Price</th>
+            <th>Volume</th>
+            <th>Purchase Stock</th>
+          </tr>
+        </thead>
+        <!-- This is where the table gets the values from the database -->
+        <tbody> {% for stock in stocks %} 
+          <tr class="stock-rows">
 
-  <h1>Stock Market</h1>
-  
-  <!-- Grid system used from bootstrap https://getbootstrap.com/docs/5.3/layout/grid/ -->
-    <div class="row">
-      <div class="col-3" id="title">Stock</div>
-      <div class="col-3" id="title">Market Price</div>
-      <div class="col-3" id="title">Market Cap</div>
-    </div>
-  
-    <div class="row">
-      <div class="col-3">NVDA</div>
-      <div class="col-3">$108.10</div>
-      <div class="col-3">$2.65T</div>
-      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+            <!-- Cell gets the company_name value from the database  -->
+            <td class="stock-rows">{{ stock.company_name }}</td>
 
-            <!-- Modal -->
-      <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <ul>
-                {% for stock in stocks %}
-                <li>{{ stock.company_name }} ({{ stock.initial_price }})</li>
-                {% else %}
-                <li>No Stocks found</li>
-                {% endfor %}
-              </ul>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary">Purchase</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  
-    <div class="row">
-      <div class="col-3">AAPL</div>
-      <div class="col-3">$220.11</div>
-      <div class="col-3">$3.358T</div>
-      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+            <!-- Cell gets the ticker_symbol value from the database  -->
+            <td class="stock-rows">{{ stock.ticker_symbol }}</td>
 
-              <!-- Modal -->
-        <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p>test</p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Purchase</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>    
-    </div>
-  
-    <div class="row">
-      <div class="col-3">MSFT</div>
-      <div class="col-3">$423.04</div>
-      <div class="col-3">$3.144T</div>
-      <!-- Using modals from bootstrap https://getbootstrap.com/docs/5.3/components/modal/-->
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+            <!-- Cell gets the current_price value from the database  -->
+            <td class="stock-rows">{{ stock.current_price }}</td>
 
-              <!-- Modal -->
-        <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p>test</p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Purchase</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">GOOG</div>
-      <div class="col-3">$152.15</div>
-      <div class="col-3">$1.864T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
+            <!-- Cell gets the volume value from the database  -->
+            <td class="stock-rows">{{ stock.volume }}</td>
 
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
+            <!-- Links for deleting and edting the stocks in the stock table -->
+            <td> 
+              <a class="buy" href="{{ url_for('buy_stock', id=stock.stock_id) }}">Buy</a>
+            </td>
+          </tr> {% else %} 
+          <tr>
+            <!-- If no stocks are found display this message -->
+            <td colspan="7">No stocks found</td>
+          </tr> {% endfor %} </tbody>
+      </table>
     </div>
-  
-    <div class="row">
-      <div class="col-3">META</div>
-      <div class="col-3">$511.83</div>
-      <div class="col-3">$1.294T</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">TSLA</div>
-      <div class="col-3">$228.13</div>
-      <div class="col-3">$728.79B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">WMT</div>
-      <div class="col-3">$78.84</div>
-      <div class="col-3">$633.73B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">JPM</div>
-      <div class="col-3">$207.23</div>
-      <div class="col-3">$589.60B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">COST</div>
-      <div class="col-3">$900.40</div>
-      <div class="col-3">$399.17B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-    <div class="row">
-      <div class="col-3">NFLX</div>
-      <div class="col-3">$681.47</div>
-      <div class="col-3">$292.46B</div>
-      <div class="col-3 Purchase-cell"><button type="button" class="btn btn-lg Purchase-button" data-bs-toggle="modal" data-bs-target="#purchaseModal">Purchase</button></div>
-
-                <!-- Modal -->
-          <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title" id="purchaseModalLabel">Stock Name</h1>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p>test</p>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary">Purchase</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>  
-      </div>  
-    </div>
-  
-  </div>
+  </body>
   
   {% endblock %}
