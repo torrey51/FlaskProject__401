@@ -1,0 +1,94 @@
+{% extends 'home.html' %}
+{% block content %}
+
+<style>
+  /* CSS for the background of the webpage */
+  body {
+      background-color: black;
+  }
+  h1 {
+      color: white;
+      font-weight: bold;
+  }
+  /* CSS for the adjusting the entire form */
+  .form-container {
+      display: flex;
+      justify-content: center;
+  }
+
+  /* CSS for the titles above the form input fields */
+  .form-title {
+      color: white;
+      font-weight: bold;
+  }
+
+  /* CSS for the title of the update stock page */
+  h1 {
+      text-align: center;
+  }
+
+  /* CSS for the submit button */
+  .submit {
+      font-weight: bold;
+  }
+
+  /* CSS for the submit button when it is hovered */
+  .submit:hover{ 
+      background-color: #00c805;
+  }
+
+  /* CSS for the back to admin stock market hyperlink button */
+  .admin{
+      text-decoration: none;
+      border: solid;
+      border-radius: 25px;
+      padding: 5px;
+      background-color:#00c805; 
+      color: black;
+      font-weight: bold;
+  }
+
+  /* CSS for when the back to admin stock market hyperlinked is hovered */
+  .admin:hover {
+      background-color:black; 
+      border-color: white;
+      color: white;
+  }
+
+  /* CSS for the p element that contains the admin back button */
+  .admin-back{
+      padding-top: 30px;
+      text-align: center;
+  }
+
+</style>
+
+<h1>Welcome to the Account Page</h1>
+
+<!--Login-->
+<body>
+  <h1>Add Stock</h1>
+  <div class="form-container">
+    <form method="POST" action=""> 
+      {{ form.hidden_tag() }} 
+      <p class="form-title">{{ form.first_name.label }}<br>{{ form.first_name() }}</p>
+      <p class="form-title">{{ form.last_name.label }}<br>{{ form.last_name() }}</p>
+      <p class="form-title">{{ form.username.label }}<br>{{ form.username() }}</p>
+      <p class="form-title">{{ form.email.label }}<br>{{ form.email() }}</p>
+      <p class="form-title">{{ form.password.label }}<br>{{ form.password() }}</p>
+      <p class="form-title">{{ form.confirm_password.label }}<br>{{ form.confirm_password() }}</p>
+      <!-- Take the message set in the UserForm table to be displayed if the user password does not match -->
+      {% if form.confirm_password.errors %}
+        <div class="error-message">
+          {% for error in form.confirm_password.errors %}
+            <span>{{ error }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+        </div>
+      <p class="form-title">{{ form.submit() }}</p>
+    </form>
+  </div>
+  <p class="admin-back"><a class="admin" href="{{ url_for('admin_market') }}">Back to admin market</a></p>
+</body>
+{% endblock %}

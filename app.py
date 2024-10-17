@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Email
+from wtforms import StringField, SubmitField, PasswordField
+from wtforms.validators import DataRequired, Email, EqualTo
+from werkzeug.security import generate_password_hash 
 
 app= Flask(__name__)
 
@@ -23,7 +24,6 @@ class Stock(db.Model):
     current_price = db.Column(db.Float, nullable=False)
     volume = db.Column(db.Float, nullable=False)
 
-
 # Flask-WTF form for handling user input for stocks
 class StockForm(FlaskForm):
     company_name = StringField('Name', validators=[DataRequired()])
@@ -39,16 +39,38 @@ class Hours(db.Model):
     hour_id = db.Column(db.Integer, primary_key=True)
     open_day = db.Column(db.String(9), nullable=False)
     close_day = db.Column(db.String(9), nullable=False)
-    open_hour = db.Column(db.Float, nullable=False)
-    close_hour = db.Column(db.Float, nullable=False)
+    open_hour = db.Column(db.Integer, nullable=False)
+    close_hour = db.Column(db.Integer, nullable=False)
 
-# Flask-WTF form for handling user input for chaning market hours
+# Flask-WTF form for handling user input for changing market hours
 class HoursForm(FlaskForm):
     open_day = StringField('open_day', validators=[DataRequired()])
     close_day = StringField('close_day', validators=[DataRequired()])
     open_hour = StringField('open_hour', validators=[DataRequired()])
     close_hour = StringField('close_hour', validators=[DataRequired()])
     submit = SubmitField('submit')
+
+
+# Creating a User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    username = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    user_type = db.Column(db.Enum('customer', 'admin', name='user_type_enum'), nullable=False)
+
+# Flask-WTF form for handling user input for creating a user account
+class UserForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
+    submit = SubmitField('Create')
+
 
 #route 1 (page 1) #Home
 @app.route('/')
@@ -152,13 +174,45 @@ def portfolio():
     about = ['Seth Torrey', 'IFT 401 Capstone']
     return render_template('portfolio.html', portfolio=portfolio)
 
-#route 3 (page 3) #account
-@app.route('/account')
+#route 4 (page 3) #account
+@app.route('/account', methods=["GET", "POST"])
 def account():
-    about = ['Seth Torrey', 'IFT 401 Capstone']
-    return render_template('account.html', account=account)
+    form = UserForm()
+    if form.validate_on_submit():
+        new_user = User(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            username=form.username.data,
+            email=form.email.data,
+            password=generate_password_hash(form.password.data),
+            user_type='customer'
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash('User created successfully!')
+        return redirect(url_for('market'))
+    return render_template('account.html', form=form)
 
-#route 3 (page 3) #admin
+#route 4 (page 4) #admin account
+@app.route('/admin_account', methods=["GET", "POST"])
+def admin_account():
+    form = UserForm()
+    if form.validate_on_submit():
+        new_user = User(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            username=form.username.data,
+            email=form.email.data,
+            password=generate_password_hash(form.password.data),
+            user_type='admin'
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash('User created successfully!')
+        return redirect(url_for('market'))
+    return render_template('admin_account.html', form=form)
+
+#route 5 (page 3) #admin
 @app.route('/admin')
 def admin():
     about = ['Seth Torrey', 'IFT 401 Capstone']
