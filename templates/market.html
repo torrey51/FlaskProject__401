@@ -22,6 +22,7 @@
     /* CSS for the titles in the stock markert table */
     tr th {
       padding: 10px;
+      color:#00c805;
     }
 
 
@@ -82,11 +83,9 @@
       font-family: Clock;
     }
 
-
   </style>
   
   <body>
-    <h1>Stock Market</h1>
     {% if last_hour %}
     <p class="market-hours">Market Hours: {{ last_hour.open_day }}-{{ last_hour.close_day }} {{ last_hour.open_hour }}am-{{ last_hour.close_hour }}pm</p>
     {% else %}
@@ -109,6 +108,7 @@
             <th>Ticker</th>
             <th>Current Price</th>
             <th>Volume</th>
+            <th>Market Capitalization</th>
             <th>Purchase Stock</th>
           </tr>
         </thead>
@@ -127,6 +127,9 @@
 
             <!-- Cell gets the volume value from the database  -->
             <td class="stock-rows">{{ stock.volume }}</td>
+
+            <!-- Cell is calculate in the .py file multiplying the volume and the current price to get the market capitalization -->
+            <td class="stock-rows">{{ stock.market_capitalization }}</td>
 
             <!-- Links for deleting and edting the stocks in the stock table -->
             <td> 

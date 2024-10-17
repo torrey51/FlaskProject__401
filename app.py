@@ -2,12 +2,32 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
-from wtforms.validators import DataRequired, Email, EqualTo
+from wtforms.validators import DataRequired, Email, EqualTo, Regexp
 from werkzeug.security import generate_password_hash 
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+import werkzeug
+from werkzeug.exceptions import HTTPException
+
 
 app= Flask(__name__)
 
 app.config['SECRET_KEY'] = 'your_secret_key'
+
+# # Sentry SDK
+# sentry_sdk.init('https://4502af8bc3c26c72d3c830cbb2d74ac7@o4508139583700992.ingest.us.sentry.io/4508139586846720', integrations=[FlaskIntegration()])
+
+# class InsufficientEmail(werkzeug.exceptions.HTTPException):
+#     code = 1062
+#     description = "Email already in use."
+
+
+# @app.errorhandler(HTTPException)
+# def handle_1062(error):
+#     flash(error.description, 'error')
+#     return render_template('account.html')
+
+# raise InsufficientEmail()
 
 
 # MySQL database configuration
@@ -23,6 +43,11 @@ class Stock(db.Model):
     initial_price = db.Column(db.Float, nullable=False)
     current_price = db.Column(db.Float, nullable=False)
     volume = db.Column(db.Float, nullable=False)
+
+#Calculates the market capitalization
+    @property
+    def market_capitalization(self):
+        return self.current_price * self.volume
 
 # Flask-WTF form for handling user input for stocks
 class StockForm(FlaskForm):
@@ -56,7 +81,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
-    username = db.Column(db.String(80), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     user_type = db.Column(db.Enum('customer', 'admin', name='user_type_enum'), nullable=False)
@@ -66,7 +91,8 @@ class UserForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
     username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired()])
+    # Email field has a regular expression to validate that the user input is an email
+    email = StringField('Email', validators=[DataRequired(), Regexp('^[a-zA-Z0-9_.±]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$', message='Must enter and email address')])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Create')
@@ -77,7 +103,7 @@ class UserForm(FlaskForm):
 def home():
     return render_template('home.html')
 
-#route 2 (page 2) #market
+#route 2 (page 2) market
 @app.route('/market')
 def market():   
     db.create_all()
@@ -85,7 +111,7 @@ def market():
     last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     return render_template('market.html', stocks=stocks, last_hour=last_hour)
 
-#Buying Stock
+#route 3 (page 3) buying stock
 @app.route("/buy-stock/<int:id>", methods=["GET", "POST"])
 def buy_stock(id):
     stock = Stock.query.get_or_404(id)
@@ -101,14 +127,14 @@ def buy_stock(id):
         return redirect(url_for('market'))
     return render_template("buy_stock.html", form=form, stock=stock)
 
-#Route 3 for the admin market page
+#Route 4 (page 4) admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
 def admin_market():
     stocks = Stock.query.all()
     last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     return render_template("admin_market.html", stocks=stocks, last_hour=last_hour)
 
-#Adding Stock
+#Route 5 (page 5) adding stock
 @app.route("/add-stock", methods=["GET", "POST"])
 def add_stock():
     form = StockForm()
@@ -126,7 +152,7 @@ def add_stock():
         return redirect(url_for('admin_market'))
     return render_template("add_stock.html", form=form)
 
-#Deleting Stock
+#Route 6 deleting stock
 @app.route("/delete-stock/<int:id>")
 def delete_stock(id):
     stock = Stock.query.get_or_404(id)
@@ -135,7 +161,7 @@ def delete_stock(id):
     flash('Stock deleted sucessfully!')
     return redirect(url_for('admin_market'))
 
-#Update Stock
+#Route 7 (page 6) updating stock
 @app.route("/update-stock/<int:id>", methods=["GET", "POST"])
 def update_stock(id):
     stock = Stock.query.get_or_404(id)
@@ -151,7 +177,7 @@ def update_stock(id):
         return redirect(url_for('admin_market'))
     return render_template("update_stock.html", form=form, stock=stock)
 
-#Adding Market Hours
+#Route 8 (page 7) changing market hours
 @app.route("/change-market-hours", methods=["GET", "POST"])
 def change_hours():
     form = HoursForm()
@@ -168,13 +194,13 @@ def change_hours():
         return redirect(url_for('admin_market'))
     return render_template("change_market_hours.html", form=form)
 
-#route 3 (page 3) #about
+#route 9 (page 8) portfolio page
 @app.route('/portfolio')
 def portfolio():
     about = ['Seth Torrey', 'IFT 401 Capstone']
     return render_template('portfolio.html', portfolio=portfolio)
 
-#route 4 (page 3) #account
+#route 10 (page 9) creating account page
 @app.route('/account', methods=["GET", "POST"])
 def account():
     form = UserForm()
@@ -193,7 +219,8 @@ def account():
         return redirect(url_for('market'))
     return render_template('account.html', form=form)
 
-#route 4 (page 4) #admin account
+
+#route 11 (page 10) creating admin account
 @app.route('/admin_account', methods=["GET", "POST"])
 def admin_account():
     form = UserForm()
@@ -209,30 +236,5 @@ def admin_account():
         db.session.add(new_user)
         db.session.commit()
         flash('User created successfully!')
-        return redirect(url_for('market'))
+        return redirect(url_for('admin_market'))
     return render_template('admin_account.html', form=form)
-
-#route 5 (page 3) #admin
-@app.route('/admin')
-def admin():
-    about = ['Seth Torrey', 'IFT 401 Capstone']
-    return render_template('admin.html', admin=admin)
-
-
-#route 34 (page 4) #test
-@app.route('/test')
-def test():
-    tests = ['']
-    return render_template('test.html', tests=tests)
-
-# route 2: Add User
-@app.route("/add-user", methods=["GET", "POST"])
-def add_user():
-    form = UserForm()
-    if form.validate_on_submit():
-        new_user = User(name=form.name.data, email=form.email.data)
-        db.session.add(new_user)
-        db.session.commit()
-        flash('User added successfully!')
-        return redirect(url_for('index'))
-    return render_template("admin_market.html", form=form)

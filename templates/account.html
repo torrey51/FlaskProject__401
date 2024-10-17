@@ -77,17 +77,24 @@
       <p class="form-title">{{ form.first_name.label }}<br>{{ form.first_name() }}</p>
       <p class="form-title">{{ form.last_name.label }}<br>{{ form.last_name() }}</p>
       <p class="form-title">{{ form.username.label }}<br>{{ form.username() }}</p>
+      {% if form.email.errors %}
+      <div class="error-message">
+        {% for error in form.email.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
       <p class="form-title">{{ form.email.label }}<br>{{ form.email() }}</p>
       <p class="form-title">{{ form.password.label }}<br>{{ form.password() }}</p>
+  <!-- Take the message set in the UserForm table to be displayed if the user password does not match -->
+    {% if form.confirm_password.errors %}
+      <div class="error-message">
+        {% for error in form.confirm_password.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
       <p class="form-title">{{ form.confirm_password.label }}<br>{{ form.confirm_password() }}</p>
-      <!-- Take the message set in the UserForm table to be displayed if the user password does not match -->
-      {% if form.confirm_password.errors %}
-        <div class="error-message">
-          {% for error in form.confirm_password.errors %}
-            <span>{{ error }}</span>
-          {% endfor %}
-        </div>
-      {% endif %}
       <p class="form-title">{{ form.submit() }}</p>
     </form>
   </div>

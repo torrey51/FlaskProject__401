@@ -63,11 +63,9 @@
 
 </style>
 
-<h1>Welcome to the Account Page</h1>
-
-<!--Login-->
+<!--Creating admin account-->
 <body>
-  <h1>Add Stock</h1>
+  <h1>Create Account</h1>
   <div class="form-container">
     <form method="POST" action=""> 
       {{ form.hidden_tag() }} 
@@ -85,7 +83,6 @@
           {% endfor %}
         </div>
       {% endif %}
-        </div>
       <p class="form-title">{{ form.submit() }}</p>
     </form>
   </div>

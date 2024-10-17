@@ -21,6 +21,7 @@
     /* CSS for the titles in the stock markert table */
     tr th {
       padding: 10px;
+      color:#00c805
     }
 
     /* CSS for adding lines in the table */
@@ -120,6 +121,7 @@
      <div class="change-buttons">
       <p style="text-align: center;"><a class="add" href="{{ url_for('add_stock') }}">Add New Stock</a></p>
       <p style="text-align: center;"><a class="add" href="{{ url_for('change_hours') }}">Change Market Hours</a></p>
+      <p style="text-align: center;"><a class="add" href="{{ url_for('admin_account') }}">Create admin account</a></p>
     </div>
     <!-- Container for the stock table -->
     <div class="table-container">
@@ -134,6 +136,7 @@
             <th>Initial Price</th>
             <th>Current Price</th>
             <th>Volume</th>
+            <th>Market Capitalization</th>
             <th>Change Stock</th>
           </tr>
         </thead>
@@ -157,6 +160,9 @@
 
             <!-- Cell gets the volume value from the database  -->
             <td>{{ stock.volume }}</td>
+
+            <!-- Cell is calculate in the .py file multiplying the volume and the current price to get the market capitalization -->
+            <td class="stock-rows">{{ stock.market_capitalization }}</td>
 
             <!-- Links for deleting and edting the stocks in the stock table -->
             <td> 
