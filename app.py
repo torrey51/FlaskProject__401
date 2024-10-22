@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Regexp
-from werkzeug.security import generate_password_hash 
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
+from werkzeug.security import generate_password_hash, check_password_hash
 import werkzeug
 from werkzeug.exceptions import HTTPException
 
@@ -14,21 +13,11 @@ app= Flask(__name__)
 
 app.config['SECRET_KEY'] = 'your_secret_key'
 
-# # Sentry SDK
-# sentry_sdk.init('https://4502af8bc3c26c72d3c830cbb2d74ac7@o4508139583700992.ingest.us.sentry.io/4508139586846720', integrations=[FlaskIntegration()])
-
-# class InsufficientEmail(werkzeug.exceptions.HTTPException):
-#     code = 1062
-#     description = "Email already in use."
-
-
-# @app.errorhandler(HTTPException)
-# def handle_1062(error):
-#     flash(error.description, 'error')
-#     return render_template('account.html')
-
-# raise InsufficientEmail()
-
+# Initializing the LoginManager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
 # MySQL database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stockwebsite'
@@ -77,7 +66,7 @@ class HoursForm(FlaskForm):
 
 
 # Creating a User model
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
@@ -97,17 +86,41 @@ class UserForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Create')
 
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+
+# User loader function that will retreive the user by their ID
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 #route 1 (page 1) #Home
-@app.route('/')
+@app.route('/', methods=["GET", "POST"])
 def home():
-    return render_template('home.html')
+    # If the user who is signing in is authenticated they will be redirected to the portfolio page after signing 
+    if current_user.is_authenticated:
+        return redirect(url_for('portfolio'))
+    # Form for loggin in as a user, will be redirected to the market page once logged in, and flashses a success message on the market page
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password, form.password.data):
+            login_user(user)
+            flash('Login successful!', 'success')
+            return redirect(url_for('market'))
+        else:
+            flash('Login failed. Check your email and password', 'danger')
+    return render_template('home.html', form=form)
 
 #route 2 (page 2) market
 @app.route('/market')
+@login_required
 def market():   
     db.create_all()
     stocks = Stock.query.all()
+    # Sorts the Hours table to take the most recent update to the stock market hours 
     last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     return render_template('market.html', stocks=stocks, last_hour=last_hour)
 
@@ -115,6 +128,7 @@ def market():
 @app.route("/buy-stock/<int:id>", methods=["GET", "POST"])
 def buy_stock(id):
     stock = Stock.query.get_or_404(id)
+    # Form for buying the stocks (not completed at all need to figure out how to buy stocks)
     form = StockForm(obj=stock)
     if form.validate_on_submit():
         stock.company_name = form.company_name.data
@@ -129,7 +143,13 @@ def buy_stock(id):
 
 #Route 4 (page 4) admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
+@login_required
 def admin_market():
+    # Checks if the current user is an admin or not. Will only let admins view the admin market pages. redirects the users to the market if not an admin
+    if current_user.user_type != 'admin':
+        flash('Access denied!', 'danger')
+        return redirect(url_for('market'))
+    
     stocks = Stock.query.all()
     last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     return render_template("admin_market.html", stocks=stocks, last_hour=last_hour)
@@ -137,6 +157,7 @@ def admin_market():
 #Route 5 (page 5) adding stock
 @app.route("/add-stock", methods=["GET", "POST"])
 def add_stock():
+    # Form for creating a new stock to add to the database
     form = StockForm()
     if form.validate_on_submit():
         new_stock = Stock(
@@ -166,6 +187,7 @@ def delete_stock(id):
 def update_stock(id):
     stock = Stock.query.get_or_404(id)
     form = StockForm(obj=stock)
+    # Form for updating the stock information
     if form.validate_on_submit():
         stock.company_name = form.company_name.data
         stock.ticker_symbol = form.ticker_symbol.data
@@ -180,6 +202,7 @@ def update_stock(id):
 #Route 8 (page 7) changing market hours
 @app.route("/change-market-hours", methods=["GET", "POST"])
 def change_hours():
+    # form for changing the market hours
     form = HoursForm()
     if form.validate_on_submit():
         new_schedule = Hours(
@@ -196,13 +219,14 @@ def change_hours():
 
 #route 9 (page 8) portfolio page
 @app.route('/portfolio')
+@login_required
 def portfolio():
-    about = ['Seth Torrey', 'IFT 401 Capstone']
-    return render_template('portfolio.html', portfolio=portfolio)
+    return render_template('portfolio.html', portfolio=portfolio, current_user=current_user)
 
 #route 10 (page 9) creating account page
 @app.route('/account', methods=["GET", "POST"])
 def account():
+    # Form for creating a new user, will set the account as customer since it was created on the customer account page
     form = UserForm()
     if form.validate_on_submit():
         new_user = User(
@@ -216,13 +240,14 @@ def account():
         db.session.add(new_user)
         db.session.commit()
         flash('User created successfully!')
-        return redirect(url_for('market'))
+        return redirect(url_for('home'))
     return render_template('account.html', form=form)
 
 
 #route 11 (page 10) creating admin account
 @app.route('/admin_account', methods=["GET", "POST"])
 def admin_account():
+    # for for creating a admin account, will set the account as admin since it was created on the admin accout page
     form = UserForm()
     if form.validate_on_submit():
         new_user = User(
@@ -238,3 +263,29 @@ def admin_account():
         flash('User created successfully!')
         return redirect(url_for('admin_market'))
     return render_template('admin_account.html', form=form)
+
+#route 12 (page 11) adding a login page 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # If the user who is signing in is authenticated they will be redirected to the market page after signing 
+    if current_user.is_authenticated:
+        return redirect(url_for('portfolio'))
+    # For for logging in a user (will remove eventually because the login is now on the home.html page)
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password, form.password.data):
+            login_user(user)
+            flash('Login successful!', 'success')
+            return redirect(url_for('market'))
+        else:
+            flash('Login failed. Check your email and password', 'danger')
+    return render_template('login.html', form=form)
+
+#Route 13 logging out the user
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))

@@ -1,7 +1,30 @@
-{% extends 'home.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block title %}Portfolio{% endblock %} {% block content%}
+
+<style>
+
+    body {
+        background: black;
+    }
+    
+      /* CSS for the admin stock market title, alinging in the center and bolding */
+    h1 {
+        text-align: center;
+        font-weight: bold;
+        color: white;
+    }
+
+    div {
+        color: white;
+    }
+
+    th {
+        color: white;
+    }
+
+</style>
+
 <div class="container mt-5">
-    <h1>Portfolio</h1>
+    <h1>{{ current_user.username }}'s Portfolio</h1>
 
     <h3>Account Balance</h3>
     <p>Your current balance: <span id="account-balance">${{ balance }}</span></p>
