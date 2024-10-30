@@ -91,7 +91,7 @@
         <div class="col-12 col-md-6 text-bg-primary">
           <div class="welcome d-flex align-items-center justify-content-center h-100">
             <div class="col-10 col-xl-11 py-3">
-              <h1>Welcome to Pump and Dump Academy!</h1>
+              <h1>Welcome to TradeWise!</h1>
               <hr class="border-primary-subtle mb-4">
               <h2 class="h1 mb-4">The ultimate stock trading training website</h2>
             </div>
@@ -121,7 +121,7 @@
                   {{ form.password(class="form-control", id="password") }}
                 </div>
 
-                <!-- Checkbox for keeping user signed in (not finished doesn't do anything) -->
+                <!-- Checkbox for keeping user signed in (not finished doesn't do anything, user already stays signed in) -->
                 <div class="col-12">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="" name="remember_me" id="remember_me">
@@ -144,7 +144,9 @@
               <div class="col-12">
                 <hr class="line mt-5 mb-4 border-secondary-subtle">
                 <div class="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-end">
+                  <!-- Link for creating a new account, redirects to the account.html file -->
                   <a href="{{ url_for('account')}}" class="link-secondary text-decoration-none">Create new account</a>
+                  <!-- Linke for user forgetting password (does not do anything yet) -->
                   <a href="#!" class="link-secondary text-decoration-none">Forgot password</a>
                 </div>
               </div>

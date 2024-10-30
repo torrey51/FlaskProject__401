@@ -102,6 +102,13 @@
       font-family: Clock;
     }
 
+    button {
+      border: none;
+      background-color: black;
+      color: white;
+      padding-bottom: 5px;
+      font-weight: bold;
+    }
   </style>
   
   <body>
@@ -123,6 +130,8 @@
       <p style="text-align: center;"><a class="add" href="{{ url_for('change_hours') }}">Change Market Hours</a></p>
       <p style="text-align: center;"><a class="add" href="{{ url_for('admin_account') }}">Create admin account</a></p>
     </div>
+    <!-- Button to refresh the stock table values -->
+    <button onclick="window.location.reload();">Refresh Market Table <i class="fa fa-refresh" style="color:#00c805;"></i></button>
     <!-- Container for the stock table -->
     <div class="table-container">
       <!-- Table for the stocks, pulls value from the database to populate the table -->
