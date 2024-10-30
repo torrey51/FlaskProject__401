@@ -146,6 +146,8 @@
             <th>Current Price</th>
             <th>Volume</th>
             <th>Market Capitalization</th>
+            <th>Daily High</th>
+            <th>Daily Low</th>
             <th>Change Stock</th>
           </tr>
         </thead>
@@ -172,6 +174,12 @@
 
             <!-- Cell is calculate in the .py file multiplying the volume and the current price to get the market capitalization -->
             <td class="stock-rows">{{ stock.market_capitalization }}</td>
+
+            <!-- Cell for showing the stocks daily high price-->
+            <td class="stock-rows">{{ stock.daily_high }}</td>
+
+            <!-- Cell for showing the stocks daily low price-->
+            <td class="stock-rows">{{ stock.daily_low}}</td>
 
             <!-- Links for deleting and edting the stocks in the stock table -->
             <td> 

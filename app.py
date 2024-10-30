@@ -37,6 +37,8 @@ class Stock(db.Model):
     initial_price = db.Column(db.Float, nullable=False)
     current_price = db.Column(db.Float, nullable=False)
     volume = db.Column(db.Float, nullable=False)
+    daily_high = db.Column(db.Float, nullable=True)
+    daily_low = db.Column(db.Float, nullable=True)
 
 #Calculates the market capitalization
     @property
@@ -54,10 +56,33 @@ def fluctuate_price():
             stock.current_price += fluctuate
             # rounds the current price to only use 2 decimal places
             stock.current_price = round(stock.current_price, 2)
+
+            # If the current price of the stock is higher than the daily_high then that current price becomes the new daily_high
+            if stock.current_price > stock.daily_high:
+                stock.daily_high = stock.current_price
+            # If the current price of the stock is lower than the daily_low then that current price becomes the new daily_low
+            if stock.current_price < stock.daily_low:
+                stock.daily_low = stock.current_price 
+
         db.session.commit()
 
+# Function for reseting the daily high and low to the current price of the stock so that the daily values reset everyday 
+def reset_daily_price():
+    with app.app_context():
+        stocks = Stock.query.all()
+        for stock in stocks:
+            # Resets the daily low and high to the current price of the stock
+            stock.daily_high = stock.current_price
+            stock.daily_low = stock.current_price
+        db.session.commit()
+
+# Creates the scheduler 
 sched = BackgroundScheduler(daemon=True)
+# runs the fluctuate_price function every 5 minutes. Using interval to specify when to fluctuate the prices.
 sched.add_job(fluctuate_price, 'interval', minutes=5)
+# Runs the reset_daily_price function at midnight everyday. Using cron to specify the certain time of day I want it to run
+sched.add_job(reset_daily_price, 'cron', hour=0, minute=0)
+# Starts the scheduler
 sched.start()
 
 # Flask-WTF form for handling user input for stocks
@@ -81,7 +106,7 @@ def market_open():
     # Gets the current date and time
     time_now = datetime.now()
     # Gets the current day of the week 
-    current_day = time_now.strftime("%A")
+    current_day = "Saturday"
     # Gets the current time 
     current_time = time_now.time()
     # Getting the current year
@@ -157,6 +182,8 @@ class LoginForm(FlaskForm):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
 
 #route 1 (page 1) #Home
 @app.route('/', methods=["GET", "POST"])
