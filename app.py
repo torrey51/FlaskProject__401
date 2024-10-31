@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, TimeField
+from wtforms import StringField, SubmitField, PasswordField, TimeField, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo, Regexp
 from werkzeug.security import generate_password_hash, check_password_hash
 import werkzeug
@@ -106,7 +106,7 @@ def market_open():
     # Gets the current date and time
     time_now = datetime.now()
     # Gets the current day of the week 
-    current_day = "Saturday"
+    current_day = time_now.strftime("%A")
     # Gets the current time 
     current_time = time_now.time()
     # Getting the current year
@@ -153,6 +153,7 @@ class HoursForm(FlaskForm):
 
 # Creating a User model
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
@@ -183,6 +184,16 @@ class LoginForm(FlaskForm):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Creating cash account table
+class Cash_Account(db.Model):
+    cashAccount_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    balance = db.Column(db.DECIMAL(13,2), nullable=False)
+
+# Creatin cash account form to add funds
+class Cash_AccountForm(FlaskForm):
+    balance = IntegerField('Balance', validators=[DataRequired()])
+    submit = SubmitField('Add Funds')
 
 
 #route 1 (page 1) #Home
@@ -317,10 +328,40 @@ def change_hours():
     return render_template("change_market_hours.html", form=form)
 
 #route 9 (page 8) portfolio page
-@app.route('/portfolio')
+@app.route('/portfolio', methods=["GET", "POST"])
 @login_required
 def portfolio():
-    return render_template('portfolio.html', portfolio=portfolio, current_user=current_user)
+    # prints the user id of the user that is signed in. Used for testing outputs in the terminal
+    print("Current User ID:", current_user.id)
+    # Initializes the balance to 0 before using it 
+    balance = 0
+    # Form for adding cash to cash account
+    form = Cash_AccountForm()
+    # Sets the variable cash_account to query the Cash_Account table in the database and retrieves all the values in the row
+    cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
+    
+    # Sets the balance if the cash accout exists, this allows the balance to be displayed on the webpage
+    if cash_account:
+        balance = cash_account.balance
+
+    if form.validate_on_submit():
+        # Prints the cash accout id, user id, and the users current balance for. Used for testing outputs in the terminal
+        # print("Cash Account:", cash_account.cashAccount_id, cash_account.user_id, cash_account.balance)
+
+        # If a cash account already exists for a user it will add the cash to their current balance
+        if cash_account:
+            # adding to the cash accout balance
+            cash_account.balance += int(form.balance.data)
+        # If a cash account does not already exists for a user it will create the cash account and add the initial funds
+        else:
+            cash_account = Cash_Account(user_id=current_user.id, balance=int(form.balance.data))
+            db.session.add(cash_account)
+
+        db.session.commit()
+        print("balance", balance)
+        # redirects back to the portfolio page after submitting the form so that the values don't remain in the input fields
+        return redirect(url_for('portfolio'))
+    return render_template('portfolio.html', balance=balance, current_user=current_user, form=form)
 
 #route 10 (page 9) creating account page
 @app.route('/account', methods=["GET", "POST"])

@@ -23,20 +23,30 @@
 
 </style>
 
+<script>
+    // Displays a confirmation message when the submit button is clicked
+    function confirmSubmit() {
+        return confirm("Are you sure you want to add funds?");
+    }
+</script>
+
 <div class="container mt-5">
     <h1>{{ current_user.username }}'s Portfolio</h1>
 
     <h3>Account Balance</h3>
+    <!-- Displays the logged in users balance on the webpage -->
     <p>Your current balance: <span id="account-balance">${{ balance }}</span></p>
 
     <!--Add funds button/section -->
     <h3>Add Funds</h3>
-    <form method="POST" action="/add-funds">
+    <form method="POST" action="{{ url_for('portfolio') }}">
+        {{ form.hidden_tag() }}
+
         <div class="form-group">
-            <label for="amount">Enter amount:</label>
-            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+            <label for="balance" class="form-label">Enter amount:</label>
+            {{ form.balance(class="form-control", id="balance") }}
         </div>
-        <button type="submit" class="btn btn-success mt-2">Add Funds</button>
+        {{ form.submit(class="btn btn-success mt-2", onclick="return confirmSubmit();") }}
     </form>
 
     <!--Withdraw funds button/section-->
