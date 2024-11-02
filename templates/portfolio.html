@@ -39,24 +39,26 @@
 
     <!--Add funds button/section -->
     <h3>Add Funds</h3>
-    <form method="POST" action="{{ url_for('portfolio') }}">
-        {{ form.hidden_tag() }}
+    <form method="POST" action="">
+        {{ add_form.hidden_tag() }}
 
         <div class="form-group">
-            <label for="balance" class="form-label">Enter amount:</label>
-            {{ form.balance(class="form-control", id="balance") }}
+            <label for="addFunds" class="form-label">Enter amount:</label>
+            {{ add_form.add_balance(class="form-control", id="addFunds") }}
         </div>
-        {{ form.submit(class="btn btn-success mt-2", onclick="return confirmSubmit();") }}
+        {{ add_form.add_submit(class="btn btn-success mt-2", onclick="return confirmSubmit();") }}
     </form>
 
     <!--Withdraw funds button/section-->
     <h3>Withdraw Funds</h3>
-    <form method="POST" action="/withdraw-funds">
+    <form method="POST" action="">
+        {{ withdraw_form.hidden_tag() }}
+
         <div class="form-group">
-            <label for="withdraw-amount">Enter amount:</label>
-            <input type="number" step="0.01" class="form-control" id="withdraw-amount" name="withdraw_amount" required>
+            <label for="withdrawFunds" class="form-label">Enter amount:</label>
+            {{ withdraw_form.withdraw_balance(class="form-control", id="withdrawFunds") }}
         </div>
-        <button type="submit" class="btn btn-danger mt-2">Withdraw Funds</button>
+        {{ withdraw_form.withdraw_submit(class="btn btn-danger mt-2", onclick="return confirmSubmit();") }}
     </form>
 
     <!--Active Stocks (not connected to a database)-->

@@ -190,10 +190,15 @@ class Cash_Account(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.DECIMAL(13,2), nullable=False)
 
-# Creatin cash account form to add funds
-class Cash_AccountForm(FlaskForm):
-    balance = IntegerField('Balance', validators=[DataRequired()])
-    submit = SubmitField('Add Funds')
+# Creating form to add funds
+class AddFunds(FlaskForm):
+    add_balance = IntegerField('Amount', validators=[DataRequired()])
+    add_submit = SubmitField('Add Funds')
+
+# Creating form to withdraw funds
+class WithdrawFunds(FlaskForm):
+    withdraw_balance = IntegerField('Amount', validators=[DataRequired()])
+    withdraw_submit = SubmitField('Withdraw Funds')
 
 
 #route 1 (page 1) #Home
@@ -333,35 +338,41 @@ def change_hours():
 def portfolio():
     # prints the user id of the user that is signed in. Used for testing outputs in the terminal
     print("Current User ID:", current_user.id)
-    # Initializes the balance to 0 before using it 
-    balance = 0
-    # Form for adding cash to cash account
-    form = Cash_AccountForm()
     # Sets the variable cash_account to query the Cash_Account table in the database and retrieves all the values in the row
     cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
-    
-    # Sets the balance if the cash accout exists, this allows the balance to be displayed on the webpage
-    if cash_account:
-        balance = cash_account.balance
+    # Initializes the balance to 0 before using it 
+    balance = cash_account.balance if cash_account else 0
+    # Form for adding cash to cash account
+    add_form = AddFunds()
+    withdraw_form = WithdrawFunds()
 
-    if form.validate_on_submit():
+    # If statement for the add_form
+    if add_form.validate_on_submit() and add_form.add_submit.data:
         # Prints the cash accout id, user id, and the users current balance for. Used for testing outputs in the terminal
         # print("Cash Account:", cash_account.cashAccount_id, cash_account.user_id, cash_account.balance)
-
         # If a cash account already exists for a user it will add the cash to their current balance
         if cash_account:
             # adding to the cash accout balance
-            cash_account.balance += int(form.balance.data)
+            cash_account.balance += int(add_form.add_balance.data)
         # If a cash account does not already exists for a user it will create the cash account and add the initial funds
         else:
-            cash_account = Cash_Account(user_id=current_user.id, balance=int(form.balance.data))
+            cash_account = Cash_Account(user_id=current_user.id, balance=int(add_form.add_balance.data))
+            # Adds the users cash accout to the database
             db.session.add(cash_account)
-
         db.session.commit()
-        print("balance", balance)
-        # redirects back to the portfolio page after submitting the form so that the values don't remain in the input fields
         return redirect(url_for('portfolio'))
-    return render_template('portfolio.html', balance=balance, current_user=current_user, form=form)
+
+    # elif statement for the withdraw form
+    elif withdraw_form.validate_on_submit() and withdraw_form.withdraw_submit.data:
+        # If the cash account exists and the balance is greater than or eqaul to the amount you want to withdraw then subtract the cash accout balance from the integer
+        # that was in the put in the withdraw form
+        if cash_account and cash_account.balance >= int(withdraw_form.withdraw_balance.data):
+            cash_account.balance -= int(withdraw_form.withdraw_balance.data)
+            db.session.commit()
+        return redirect(url_for('portfolio'))
+    
+    print("balance", balance)
+    return render_template('portfolio.html', balance=balance, current_user=current_user, add_form=add_form, withdraw_form=withdraw_form)
 
 #route 10 (page 9) creating account page
 @app.route('/account', methods=["GET", "POST"])
