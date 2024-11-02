@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, TimeField, IntegerField
+from wtforms import StringField, SubmitField, PasswordField, TimeField, IntegerField, DecimalField
 from wtforms.validators import DataRequired, Email, EqualTo, Regexp
 from werkzeug.security import generate_password_hash, check_password_hash
 import werkzeug
@@ -11,6 +11,7 @@ import random
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, time, date
 import holidays
+from decimal import Decimal
 
 
 app= Flask(__name__)
@@ -192,12 +193,12 @@ class Cash_Account(db.Model):
 
 # Creating form to add funds
 class AddFunds(FlaskForm):
-    add_balance = IntegerField('Amount', validators=[DataRequired()])
+    add_balance = DecimalField('Amount', places=2, validators=[DataRequired()])
     add_submit = SubmitField('Add Funds')
 
 # Creating form to withdraw funds
 class WithdrawFunds(FlaskForm):
-    withdraw_balance = IntegerField('Amount', validators=[DataRequired()])
+    withdraw_balance = DecimalField('Amount', places=2, validators=[DataRequired()])
     withdraw_submit = SubmitField('Withdraw Funds')
 
 
@@ -353,10 +354,10 @@ def portfolio():
         # If a cash account already exists for a user it will add the cash to their current balance
         if cash_account:
             # adding to the cash accout balance
-            cash_account.balance += int(add_form.add_balance.data)
+            cash_account.balance += Decimal(add_form.add_balance.data)
         # If a cash account does not already exists for a user it will create the cash account and add the initial funds
         else:
-            cash_account = Cash_Account(user_id=current_user.id, balance=int(add_form.add_balance.data))
+            cash_account = Cash_Account(user_id=current_user.id, balance=Decimal(add_form.add_balance.data))
             # Adds the users cash accout to the database
             db.session.add(cash_account)
         db.session.commit()
@@ -366,8 +367,8 @@ def portfolio():
     elif withdraw_form.validate_on_submit() and withdraw_form.withdraw_submit.data:
         # If the cash account exists and the balance is greater than or eqaul to the amount you want to withdraw then subtract the cash accout balance from the integer
         # that was in the put in the withdraw form
-        if cash_account and cash_account.balance >= int(withdraw_form.withdraw_balance.data):
-            cash_account.balance -= int(withdraw_form.withdraw_balance.data)
+        if cash_account and cash_account.balance >= Decimal(withdraw_form.withdraw_balance.data):
+            cash_account.balance -= Decimal(withdraw_form.withdraw_balance.data)
             db.session.commit()
         return redirect(url_for('portfolio'))
     
