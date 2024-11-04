@@ -1,30 +1,26 @@
 {% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content %}
 
+<script>
+  // Displays a confirmation message when the submit button is clicked
+  function confirmSubmit() {
+      return confirm("Are you sure you want to purchase this amount of stock?");
+  }
+</script>
+
 <body>
-    <!-- h1 element will populat with the stock name you are editing  -->
+    <!-- Creates a header with the name of the stock  -->
   <h1>Purchase {{ stock.company_name }} Stock</h1>
   <div class="form-container">
-    <form method="POST" action=""> 
-        {{ form.hidden_tag() }} 
-            <!-- Input box for the compnay name -->
-            <p class="form-title">{{ form.company_name.label }}<br>{{ form.company_name(size=32) }}</p>
-
-            <!-- Input box for the ticker symbol -->
-            <p class="form-title">{{ form.ticker_symbol.label }}<br>{{ form.ticker_symbol(size=32) }}</p>
-
-            <!-- Input box for the initial price -->
-            <p class="form-title">{{ form.initial_price.label }}<br>{{ form.initial_price(size=32) }}</p>
-
-            <!-- Input box for the current price -->
-            <p class="form-title">{{ form.current_price.label }}<br>{{ form.current_price(size=32) }}</p>
-
-            <!-- Input box for the volume -->
-            <p class="form-title">{{ form.volume.label }}<br>{{ form.volume(size=32) }}</p>
-
-            <!-- Form submit button -->
-            <p>{{ form.submit(class_="submit") }}</p>
-    </form>
+    <form action="{{ url_for('buy_stock', stock_id=stock.stock_id) }}" method="POST">
+      <!-- Hidden input field to retieve the stock id -->
+      <input type="hidden" name="stock_id" value="{{ stock.id }}">
+      <!-- Input field to select the volume of stock you want to buy, minimum amount is 1 -->
+      <input type="number" name="volume" min="1" required>
+      <!-- Submit button for purchasing the stock -->
+      <button onclick="return confirmSubmit();", type="submit">Buy</button>
+  </form>
   </div>
-  <p class="admin-back"><a class="admin" href="{{ url_for('admin_market') }}">Back to Admin Stock Market</a></p>
+  <!-- After submitting user will be redirected to the stock market page -->
+  <p class="back"><a href="{{ url_for('market') }}">Back to Market</a></p>
 
 {% endblock %}

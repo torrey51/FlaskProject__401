@@ -5,6 +5,14 @@
     body {
         background: black;
     }
+
+    p {
+        color: white;
+    }
+
+    label {
+        color: white;
+    }
     
       /* CSS for the admin stock market title, alinging in the center and bolding */
     h1 {
@@ -13,20 +21,89 @@
         color: white;
     }
 
-    div {
+    h3 {
+        font-weight: bold;
         color: white;
+        padding-top: 15px
     }
 
-    th {
-        color: white;
+    table {
+      color: white;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    /* CSS for the titles in the stock markert table */
+    tr th {
+      padding: 10px;
+      color:#00c805;
+    }
+
+
+    /* CSS for adding lines in the table */
+    th, td {
+      border: solid white;
+    }
+
+    /* CSS for the rows in the stock market table*/
+    .fund-rows{
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    .table-container {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* CSS for the edit and delete buttons */
+    td a {
+      text-decoration: none;
+      background-color: #00c805;
+      display: block;
+      color: black;
+      font-weight: bold;
+      width: 100%;
+      height: 100%;
+      padding: 10px 0px;
+      box-sizing: border-box;
+    }
+
+    .fixedTableHead {
+        overflow-y: auto;
+        max-height: 500px;
+        border: solid white;
+    }
+
+    .fixedTableHead table {
+        width: 100%;
+    }
+
+    .fixedTableHead thead th{
+        position: sticky;
+        top: 0;
+        background-color: black;
+        z-index: 10;
+        border-bottom: solid white;
+    }
+
+    .fixedTableHead thead {
+        background: black;
+        z-index: 1;
     }
 
 </style>
 
 <script>
     // Displays a confirmation message when the submit button is clicked
-    function confirmSubmit() {
+    function confirmAdd() {
         return confirm("Are you sure you want to add funds?");
+    }
+
+    // Displays a confirmation message when the submit button is clicked
+    function confirmWithdraw() {
+    return confirm("Are you sure you want to withdraw funds?");
     }
 </script>
 
@@ -46,7 +123,7 @@
             <label for="addFunds" class="form-label">Enter amount:</label>
             {{ add_form.add_balance(class="form-control", id="addFunds") }}
         </div>
-        {{ add_form.add_submit(class="btn btn-success mt-2", onclick="return confirmSubmit();") }}
+        {{ add_form.add_submit(class="btn btn-success mt-2", onclick="return confirmAdd();") }}
     </form>
 
     <!--Withdraw funds button/section-->
@@ -58,43 +135,102 @@
             <label for="withdrawFunds" class="form-label">Enter amount:</label>
             {{ withdraw_form.withdraw_balance(class="form-control", id="withdrawFunds") }}
         </div>
-        {{ withdraw_form.withdraw_submit(class="btn btn-danger mt-2", onclick="return confirmSubmit();") }}
+        {{ withdraw_form.withdraw_submit(class="btn btn-danger mt-2", onclick="return confirmWithdraw();") }}
     </form>
 
     <!--Active Stocks (not connected to a database)-->
     <h3>Active Stocks</h3>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>Stock</th>
-                <th>Quantity</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for stock in stocks %}
-            <!-- database -->
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stock</th>
+                    <th>Volume</th>
+                    <th>Total Value</th>
+                    <th>Sell</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in portfolio_items %}
+                <tr class="fund-rows">
+                    <td class="fund-rows">{{ item.stock.company_name }} ({{ item.stock.ticker_symbol }})</td>
+                    <td class="fund-rows">{{ item.volume }}</td>
+                    <td class="fund-rows">{{ item.total_value }}</td>
+                    <td> 
+                        <a class="sell" href="{{ url_for('sell_stock', stock_id=item.stock.stock_id) }}">Sell</a>
+                    </td>
+                </tr>{% else %}
+                <tr>
+                    <td colspan="4">No Stocks Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <!--Transaction history(not connected to a database)-->
-    <h3>Transaction History</h3>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Stock</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transaction in transactions %}
-            <!-- database -->
-            {% endfor %}
-        </tbody>
-    </table>
+    <!--Transaction history for users adding and withdrawing funds-->
+    <h3>Funds History</h3>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Transaction Type</th>
+                    <th>Amount</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fund_transactions in fund_transactions %}
+                <tr class="fund-rows">
+                    <td class="fund-rows">{{ fund_transactions.transaction_type }}</td>
+
+                    <td class="fund-rows">{{ fund_transactions.amount }}</td>
+
+                    <td class="fund-rows">{{ fund_transactions.timestamp }}</td>
+                </tr> {% else %}
+                <tr>
+                    <td colspan="4">No Fund Transaction History Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!--Transaction history for users buying and selling stocks-->
+    <h3>Stock Transaction History</h3>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stock Name</th>
+                    <th>Transaction Type</th>
+                    <th>Volume</th>
+                    <th>Price at Transaction</th>
+                    <th>Amount Spent</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transaction_data %}
+                <tr class="fund-rows">
+                    <td class="fund-rows">{{ transaction.stock_name }}</td>
+
+                    <td class="fund-rows">{{ transaction.transaction_type }}</td>
+
+                    <td class="fund-rows">{{ transaction.volume }}</td>
+
+                    <td class="fund-rows">{{ transaction.price_at_transaction }}</td>
+
+                    <td class="fund-rows">{{ transaction.funds }}</td>
+
+                    <td class="fund-rows">{{ transaction.timestamp }}</td>
+                </tr> {% else %}
+                <tr>
+                    <td colspan="4">No Stock Transaction History Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

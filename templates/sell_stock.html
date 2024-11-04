@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Sell Stock{% endblock %}
+
+{% block content %}
+
+<script>
+    // Displays a confirmation message when the submit button is clicked
+    function confirmSubmit() {
+        return confirm("Are you sure you want to sell this amount of stock?");
+    }
+  </script>
+
+<!-- Creates a header with the name of the stock -->
+<h1>Sell {{ stock.company_name }} Stock</h1>
+<div class="form-container">
+    <form action="{{ url_for('sell_stock', stock_id=stock.stock_id) }}" method="POST">
+        <!-- Hidden input field to retrieve the stock id -->
+        <input type="hidden" name="stock_id" value="{{ stock.id }}">
+        <!-- Input field to select the amount of stock to sell minumum is set to 1 -->
+        <input type="number" name="volume" min="1" required>
+        <!-- Button to submit the sell form -->
+        <button onclick="return confirmSubmit();", type="submit">Sell</button>
+    </form>
+</div>
+<!-- After submitting user will be redirected back to the portfolio page -->
+<p class="back"><a href="{{ url_for('portfolio') }}">Back to Portfolio</a></p>
+{% endblock %}

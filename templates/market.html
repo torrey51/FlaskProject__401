@@ -152,7 +152,7 @@
 
             <!-- Links for deleting and edting the stocks in the stock table -->
             <td> 
-              <a class="buy" href="{{ url_for('buy_stock', id=stock.stock_id) }}">Buy</a>
+              <a class="buy" href="{{ url_for('buy_stock', stock_id=stock.stock_id) }}">Buy</a>
             </td>
           </tr> {% else %} 
           <tr>

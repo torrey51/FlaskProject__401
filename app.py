@@ -1,17 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, TimeField, IntegerField, DecimalField
-from wtforms.validators import DataRequired, Email, EqualTo, Regexp
+from wtforms import StringField, SubmitField, PasswordField, TimeField, IntegerField, DecimalField, SelectField
+from wtforms.validators import DataRequired, Email, EqualTo, Regexp, NumberRange
 from werkzeug.security import generate_password_hash, check_password_hash
 import werkzeug
 from werkzeug.exceptions import HTTPException
 import random
 from apscheduler.schedulers.background import BackgroundScheduler
+from pytz import timezone
 from datetime import datetime, time, date
 import holidays
 from decimal import Decimal
+import os
 
 
 app= Flask(__name__)
@@ -25,6 +27,8 @@ login_manager.init_app(app)
 login_manager.login_view = 'home'
 login_manager.login_message_category = 'info'
 
+os.environ['TZ'] = 'America/Phoenix'
+
 # MySQL database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stockwebsite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -32,19 +36,20 @@ db = SQLAlchemy(app)
 
 # Creating a Stock table
 class Stock(db.Model):
+    __tablename__ = 'stock'
     stock_id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(80), nullable=False)
     ticker_symbol = db.Column(db.String(4), nullable=False)
-    initial_price = db.Column(db.Float, nullable=False)
-    current_price = db.Column(db.Float, nullable=False)
-    volume = db.Column(db.Float, nullable=False)
-    daily_high = db.Column(db.Float, nullable=True)
-    daily_low = db.Column(db.Float, nullable=True)
+    initial_price = db.Column(db.DECIMAL(13, 2), nullable=False)
+    current_price = db.Column(db.DECIMAL(13, 2), nullable=False)
+    volume = db.Column(db.DECIMAL(13, 2), nullable=False)
+    daily_high = db.Column(db.DECIMAL(13, 2), nullable=True)
+    daily_low = db.Column(db.DECIMAL(13, 2), nullable=True)
 
 #Calculates the market capitalization
     @property
     def market_capitalization(self):
-        return self.current_price * self.volume
+        return round(self.current_price * self.volume, 2)
     
 #Function for fluctuating the current stock price
 def fluctuate_price():
@@ -52,7 +57,7 @@ def fluctuate_price():
         stocks = Stock.query.all()
         for stock in stocks:
             # fluctuate is set to get a random number between -10 and 10 
-            fluctuate = random.uniform(-10, 10)
+            fluctuate = Decimal(random.uniform(-10, 10))
             # The random number is then added to or subtracted from the current price 
             stock.current_price += fluctuate
             # rounds the current price to only use 2 decimal places
@@ -78,7 +83,7 @@ def reset_daily_price():
         db.session.commit()
 
 # Creates the scheduler 
-sched = BackgroundScheduler(daemon=True)
+sched = BackgroundScheduler(timezone=timezone('America/Phoenix'), daemon=True)
 # runs the fluctuate_price function every 5 minutes. Using interval to specify when to fluctuate the prices.
 sched.add_job(fluctuate_price, 'interval', minutes=5)
 # Runs the reset_daily_price function at midnight everyday. Using cron to specify the certain time of day I want it to run
@@ -163,6 +168,9 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     user_type = db.Column(db.Enum('customer', 'admin', name='user_type_enum'), nullable=False)
 
+    cash_account = db.relationship('Cash_Account', backref='user', uselist=False)
+    transactions = db.relationship('Transaction', backref='owner', lazy=True)
+
 # Flask-WTF form for handling user input for creating a user account
 class UserForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -201,6 +209,64 @@ class WithdrawFunds(FlaskForm):
     withdraw_balance = DecimalField('Amount', places=2, validators=[DataRequired()])
     withdraw_submit = SubmitField('Withdraw Funds')
 
+# Creating Funds transaction table
+class FundTransaction(db.Model):
+    transaction_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    transaction_type = db.Column(db.String(10), nullable=False)
+    amount = db.Column(db.DECIMAL(13,2), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
+
+    user = db.relationship('User', backref='fund_transactions')
+
+
+# Creating transaction table
+class Transaction(db.Model):
+    __tablename__ = 'transaction'
+    transaction_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stock.stock_id'), nullable=False)
+    transaction_type = db.Column(db.String(10), nullable=False)
+    volume = db.Column(db.DECIMAL(13, 2), nullable=False)
+    price_at_transaction = db.Column(db.DECIMAL(13, 2), nullable=False)
+    funds = db.Column(db.DECIMAL(13, 2), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
+
+    # Transaction table relationships
+    user = db.relationship('User', back_populates='transactions')
+    stock = db.relationship('Stock', backref='transactions')
+
+
+# Creating a form for handling funds
+class FundTransactionFrom(FlaskForm):
+    Transaction_type = SelectField(
+        'Transaction Type', choices=[('deposit', 'Deposit'), ('withdraw', 'Withdraw')],
+        validators=[DataRequired()]
+    )
+    amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0)])
+    submit = SubmitField('Submit')
+
+# Creating a form for handling stock transactions
+class StockTransactionForm(FlaskForm):
+    stock_id = SelectField('Stock', coerce=int, validators=[DataRequired()])
+    transaction_type = SelectField(
+        'Transaction Type', choices=[('buy', 'Buy'), ('sell', 'Sell')],
+        validators=[DataRequired()]
+    )
+    volume = DecimalField('Volume', validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField('Submit')
+
+# Creating a table for the stocks that a user owns
+class UserStock(db.Model):
+    __tablename__ = 'user_stock'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stock.stock_id'), nullable=False)
+    volume = db.Column(db.DECIMAL(13, 2), nullable=False)
+
+    user = db.relationship('User', backref='user_stocks')
+    stock = db.relationship('Stock', backref='user_stocks')
+
 
 #route 1 (page 1) #Home
 @app.route('/', methods=["GET", "POST"])
@@ -233,25 +299,89 @@ def market():
     last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     return render_template('market.html', stocks=stocks, last_hour=last_hour)
 
-#route 3 (page 3) buying stock
-@app.route("/buy-stock/<int:id>", methods=["GET", "POST"])
-def buy_stock(id):
-    if not market_open():
-        flash("Market is closed", "danger")
-        return redirect(url_for('market'))
-    stock = Stock.query.get_or_404(id)
-    # Form for buying the stocks (not completed need to figure out how to buy stocks)
-    form = StockForm(obj=stock)
-    if form.validate_on_submit():
-        stock.company_name = form.company_name.data
-        stock.ticker_symbol = form.ticker_symbol.data
-        stock.initial_price = float(form.initial_price.data)
-        stock.current_price = float(form.current_price.data)
-        stock.volume = float(form.volume.data)
+@app.route("/buy-stock/<int:stock_id>", methods=["GET", "POST"])
+@login_required
+def buy_stock(stock_id):
+    stock = Stock.query.get(stock_id)
+    
+    if request.method == "POST":
+        volume = request.form.get('volume', type=int)  
+
+        if not market_open():
+            flash("Sorry, market is closed. Try again once the market is open", "danger")
+            return redirect(url_for('market'))
+        
+        total_cost = stock.current_price * Decimal(volume)
+
+        if current_user.cash_account.balance < total_cost:
+            return "Insufficient funds", 400
+        
+        current_user.cash_account.balance -= total_cost
+        
+        # Quering the database to see if user already has a stock purchased
+        user_stock = UserStock.query.filter_by(user_id=current_user.id, stock_id=stock_id).first()
+        if user_stock:
+            # Updates the volume of the stock if the stock already exists in the UserStock table
+            user_stock.volume += Decimal(volume)
+        else:
+            user_stock = UserStock(user_id=current_user.id, stock_id=stock_id, volume=Decimal(volume))
+            db.session.add(user_stock)
+
+        new_transaction = Transaction(user_id=current_user.id, stock_id=stock_id, transaction_type='buy', volume=volume, price_at_transaction=stock.current_price, funds=total_cost)
+        db.session.add(new_transaction)
+        stock.volume += volume
         db.session.commit()
-        flash('Stock Purchase successfull!')
-        return redirect(url_for('market'))
-    return render_template("buy_stock.html", form=form, stock=stock)
+        
+        return redirect(url_for('market'))  # Redirect to market or wherever appropriate
+    
+    return render_template("buy_stock.html", stock=stock)
+
+@app.route("/sell-stock/<int:stock_id>", methods=["GET", "POST"])
+@login_required
+def sell_stock(stock_id):
+    stock = Stock.query.get(stock_id)
+    
+    if request.method == "POST":
+        volume_to_sell = request.form.get('volume', type=int)  
+
+        if not market_open():
+            flash("Sorry, market is closed. Try again once the market is open", "danger")
+            return redirect(url_for('portfolio'))
+        
+        user_stock = UserStock.query.filter_by(user_id=current_user.id, stock_id=stock_id).first()
+        
+        if not user_stock or user_stock.volume < volume_to_sell:
+            return "Insufficient stock volume to sell", 400
+
+        current_price = stock.current_price
+        sell_value = current_price * Decimal(volume_to_sell)
+
+        # Update user's cash account balance
+        current_user.cash_account.balance += sell_value
+        
+        # Update or delete user's stock volume
+        user_stock.volume -= Decimal(volume_to_sell)
+        if user_stock.volume == 0:
+            db.session.delete(user_stock)
+        
+        # Record the transaction
+        new_transaction = Transaction(
+            user_id=current_user.id,
+            stock_id=stock_id,
+            transaction_type='sell',
+            volume=volume_to_sell,
+            price_at_transaction=current_price,
+            funds=sell_value
+        )
+        db.session.add(new_transaction)
+        stock.volume -= volume_to_sell
+        db.session.commit()
+
+        return redirect(url_for('portfolio')) 
+    
+    return render_template("sell_stock.html", stock=stock)
+
+
 
 #Route 4 (page 4) admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
@@ -343,6 +473,22 @@ def portfolio():
     cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
     # Initializes the balance to 0 before using it 
     balance = cash_account.balance if cash_account else 0
+
+    # Queries the users stocks filtering by their user id
+    user_stocks = UserStock.query.filter_by(user_id=current_user.id).all()
+
+    portfolio_items = []
+    for user_stock in user_stocks:
+        stock = Stock.query.get(user_stock.stock_id)
+        transaction = Transaction.query.filter_by(user_id=current_user.id, stock_id=stock.stock_id, transaction_type='buy').first()
+        if stock and transaction:
+            portfolio_items.append({
+                'stock': stock,
+                'volume': user_stock.volume, 
+                'total_value': stock.current_price * user_stock.volume,
+                'transaction_id': transaction.transaction_id
+            })
+
     # Form for adding cash to cash account
     add_form = AddFunds()
     withdraw_form = WithdrawFunds()
@@ -360,6 +506,14 @@ def portfolio():
             cash_account = Cash_Account(user_id=current_user.id, balance=Decimal(add_form.add_balance.data))
             # Adds the users cash accout to the database
             db.session.add(cash_account)
+
+        fund_transaction = FundTransaction(
+            user_id=current_user.id,
+            transaction_type='add',
+            amount=Decimal(add_form.add_balance.data)
+        )
+        db.session.add(fund_transaction)
+
         db.session.commit()
         return redirect(url_for('portfolio'))
 
@@ -369,11 +523,37 @@ def portfolio():
         # that was in the put in the withdraw form
         if cash_account and cash_account.balance >= Decimal(withdraw_form.withdraw_balance.data):
             cash_account.balance -= Decimal(withdraw_form.withdraw_balance.data)
+
+            fund_transaction = FundTransaction(
+                user_id=current_user.id, 
+                transaction_type='withdraw',
+                amount=Decimal(withdraw_form.withdraw_balance.data)
+            )
+            db.session.add(fund_transaction)
+
             db.session.commit()
         return redirect(url_for('portfolio'))
     
+    # Queries the fund transaction table for only the user that is currently signed in by filtering by the user id
+    fund_transactions = FundTransaction.query.filter_by(user_id=current_user.id).all()
+    # Queries the transaction table for only the user that is currently signed in by filtering by the user id
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    # Prepares the transaction datat to be used on the portfolio.html page
+    transaction_data = []
+    for transaction in transactions:
+        stock = Stock.query.get(transaction.stock_id)
+        transaction_data.append({
+            'stock_name': stock.company_name,
+            'transaction_type': transaction.transaction_type,
+            'volume': transaction.volume,
+            'price_at_transaction': transaction.price_at_transaction,
+            'funds': transaction.funds,
+            'timestamp': transaction.timestamp
+        })
+    
     print("balance", balance)
-    return render_template('portfolio.html', balance=balance, current_user=current_user, add_form=add_form, withdraw_form=withdraw_form)
+    return render_template('portfolio.html', balance=balance, current_user=current_user, add_form=add_form, withdraw_form=withdraw_form, transaction_data=transaction_data, portfolio_items=portfolio_items, fund_transactions=fund_transactions)
 
 #route 10 (page 9) creating account page
 @app.route('/account', methods=["GET", "POST"])
