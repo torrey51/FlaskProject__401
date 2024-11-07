@@ -27,6 +27,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'home'
 login_manager.login_message_category = 'info'
 
+# Sets the timezone to Mountain Standard time
 os.environ['TZ'] = 'America/Phoenix'
 
 # MySQL database configuration
@@ -54,7 +55,9 @@ class Stock(db.Model):
 #Function for fluctuating the current stock price
 def fluctuate_price():
     with app.app_context():
+        # Queries all the stocks in the Stock table
         stocks = Stock.query.all()
+        # For loop to iterate through the stocks in the Stocks table
         for stock in stocks:
             # fluctuate is set to get a random number between -10 and 10 
             fluctuate = Decimal(random.uniform(-10, 10))
@@ -63,19 +66,27 @@ def fluctuate_price():
             # rounds the current price to only use 2 decimal places
             stock.current_price = round(stock.current_price, 2)
 
+            # Sets the daily high to 0 if the value in the database table is null
+            if stock.daily_high is None:
+                stock.daily_high = 0
+            # Sets the daily low to 0 if the value in the database is null
+            if stock.daily_low is None:                
+                stock.daily_low = stock.current_price
+
             # If the current price of the stock is higher than the daily_high then that current price becomes the new daily_high
             if stock.current_price > stock.daily_high:
                 stock.daily_high = stock.current_price
             # If the current price of the stock is lower than the daily_low then that current price becomes the new daily_low
             if stock.current_price < stock.daily_low:
                 stock.daily_low = stock.current_price 
-
         db.session.commit()
 
 # Function for reseting the daily high and low to the current price of the stock so that the daily values reset everyday 
 def reset_daily_price():
     with app.app_context():
+        # Queries all of the stocks in the Stock table
         stocks = Stock.query.all()
+        # For loop to iterate through all of the stocks in the Stocks table
         for stock in stocks:
             # Resets the daily low and high to the current price of the stock
             stock.daily_high = stock.current_price
@@ -118,7 +129,7 @@ def market_open():
     # Getting the current year
     current_year = datetime.now().year
     # Get the current date
-    current_date = time_now.date()
+    current_date = time_now.date() 
 
     # Creates a variable holiday_dates to store the us calendar holidays for the whatever the current year it is 
     # Using a set to store all of the holidays in one variable, and using the .keys() to only get the dates and not include the holiday names
@@ -137,15 +148,13 @@ def market_open():
     if current_date in holiday_dates:
         return False
 
-    # Checks that the current day is one of the days the market is open. M-W closed on weekends
+    # Checks that the current day is one of the days the market is open. M-F closed on weekends
     if current_day in open_days:
-
         # Queries the database to get the hours
         market_hours = Hours.query.order_by(Hours.hour_id.desc()).first()
-
-        # If a weekday check to see if its within the market hours
+        # return if the current time is between the open and closing hours
         return market_hours.open_hour <= current_time <= market_hours.close_hour
-    # else then false and the market is closed and users should not be able to buy and sell stocks
+    # else then the market is closed and users should not be able to buy and sell stocks
     else:
         return False
 
@@ -168,8 +177,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     user_type = db.Column(db.Enum('customer', 'admin', name='user_type_enum'), nullable=False)
 
+    # Creates a 1 to 1 relationship between the user and the cash account. Each user will only have one cash account associated with their user profile
     cash_account = db.relationship('Cash_Account', backref='user', uselist=False)
-    transactions = db.relationship('Transaction', backref='owner', lazy=True)
+    # Creates a 1 to many relationship betweent the user and transactions. Users can have many transactions
+    transactions = db.relationship('Transaction', back_populates='user', lazy=True)
 
 # Flask-WTF form for handling user input for creating a user account
 class UserForm(FlaskForm):
@@ -196,6 +207,7 @@ def load_user(user_id):
 # Creating cash account table
 class Cash_Account(db.Model):
     cashAccount_id = db.Column(db.Integer, primary_key=True)
+    # user_id is a foreignKey in the Cash_Account table
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.DECIMAL(13,2), nullable=False)
 
@@ -212,11 +224,13 @@ class WithdrawFunds(FlaskForm):
 # Creating Funds transaction table
 class FundTransaction(db.Model):
     transaction_id = db.Column(db.Integer, primary_key=True)
+    # User id is a foreign key in the FundTransaction table
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     transaction_type = db.Column(db.String(10), nullable=False)
     amount = db.Column(db.DECIMAL(13,2), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.now)
 
+    # Creates a one to many relationship between user and fund transactions. Users can have many fund transactions
     user = db.relationship('User', backref='fund_transactions')
 
 
@@ -224,7 +238,9 @@ class FundTransaction(db.Model):
 class Transaction(db.Model):
     __tablename__ = 'transaction'
     transaction_id = db.Column(db.Integer, primary_key=True)
+    # user_id is a ForeignKey in the Transaction Table
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # stock_id is a ForeignKey in the Transaction Table
     stock_id = db.Column(db.Integer, db.ForeignKey('stock.stock_id'), nullable=False)
     transaction_type = db.Column(db.String(10), nullable=False)
     volume = db.Column(db.DECIMAL(13, 2), nullable=False)
@@ -232,27 +248,22 @@ class Transaction(db.Model):
     funds = db.Column(db.DECIMAL(13, 2), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.now)
 
-    # Transaction table relationships
+    # Creates a one to many relationship between the user and transaciton. User can have many transactions 
     user = db.relationship('User', back_populates='transactions')
+    # Creates a one to many relationship between stock and transaction. Stock can be associated with multiple transactions
     stock = db.relationship('Stock', backref='transactions')
 
 
 # Creating a form for handling funds
 class FundTransactionFrom(FlaskForm):
-    Transaction_type = SelectField(
-        'Transaction Type', choices=[('deposit', 'Deposit'), ('withdraw', 'Withdraw')],
-        validators=[DataRequired()]
-    )
+    Transaction_type = SelectField('Transaction Type', choices=[('deposit', 'Deposit'), ('withdraw', 'Withdraw')], validators=[DataRequired()])
     amount = DecimalField('Amount', validators=[DataRequired(), NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 # Creating a form for handling stock transactions
 class StockTransactionForm(FlaskForm):
     stock_id = SelectField('Stock', coerce=int, validators=[DataRequired()])
-    transaction_type = SelectField(
-        'Transaction Type', choices=[('buy', 'Buy'), ('sell', 'Sell')],
-        validators=[DataRequired()]
-    )
+    transaction_type = SelectField('Transaction Type', choices=[('buy', 'Buy'), ('sell', 'Sell')], validators=[DataRequired()])
     volume = DecimalField('Volume', validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Submit')
 
@@ -260,11 +271,15 @@ class StockTransactionForm(FlaskForm):
 class UserStock(db.Model):
     __tablename__ = 'user_stock'
     id = db.Column(db.Integer, primary_key=True)
+    # user_id is a ForeignKey in the UserStock table
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # stock_id is a ForeignKey in the UsetStock table
     stock_id = db.Column(db.Integer, db.ForeignKey('stock.stock_id'), nullable=False)
     volume = db.Column(db.DECIMAL(13, 2), nullable=False)
 
+    # Creates a one to many relationship between user and user stocks. Users can have many stocks
     user = db.relationship('User', backref='user_stocks')
+    # Creates a one to many relationship between stock and user stocks. Stocks can have many users
     stock = db.relationship('Stock', backref='user_stocks')
 
 
@@ -281,7 +296,6 @@ def home():
         # Checks to see if the hashed passwords match each other, if they do user will be logged in
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
-            flash('Login successful!', 'success')
             return redirect(url_for('market'))
         else:
             flash('Login failed. Check your email and password', 'danger')
@@ -302,58 +316,77 @@ def market():
 @app.route("/buy-stock/<int:stock_id>", methods=["GET", "POST"])
 @login_required
 def buy_stock(stock_id):
+    # Queries the Stock table and retreives the stock_id
     stock = Stock.query.get(stock_id)
     
+    # If statement to only run the below code if the form is submitted 
     if request.method == "POST":
+        # Retrieves the volume from the form used to buy stock. Form is specefied in the buy_stock.html
         volume = request.form.get('volume', type=int)  
 
+        # If the market is not open then flash message and return to market page
         if not market_open():
             flash("Sorry, market is closed. Try again once the market is open", "danger")
             return redirect(url_for('market'))
         
+        # total cost of stock is current price of the stock multiplied by the volume you are buying at 
         total_cost = stock.current_price * Decimal(volume)
 
+        # If the user doesn't have enough available cash redirect to 400 and 
         if current_user.cash_account.balance < total_cost:
             return "Insufficient funds", 400
         
+        # Get the users cash account balance and subtract the total cost 
         current_user.cash_account.balance -= total_cost
         
         # Quering the database to see if user already has a stock purchased
         user_stock = UserStock.query.filter_by(user_id=current_user.id, stock_id=stock_id).first()
+        # If user_stock exists
         if user_stock:
             # Updates the volume of the stock if the stock already exists in the UserStock table
             user_stock.volume += Decimal(volume)
+        # If user_stock doesn't exist create a user_stock with current user_id, stock_id, and volume 
         else:
             user_stock = UserStock(user_id=current_user.id, stock_id=stock_id, volume=Decimal(volume))
+            # Adding the new user_stock to the session
             db.session.add(user_stock)
 
+        # Set the variable new_transaction with the userid, stocks id, transaction type, the volume, the price at transaction, and the total funds for when a stock is purchased
         new_transaction = Transaction(user_id=current_user.id, stock_id=stock_id, transaction_type='buy', volume=volume, price_at_transaction=stock.current_price, funds=total_cost)
+        # Adding the new_transaction to the session
         db.session.add(new_transaction)
+        # Add volume to the stock when a stock is purchased
         stock.volume += volume
+        # Commits all the changes to the database
         db.session.commit()
         
-        return redirect(url_for('market'))  # Redirect to market or wherever appropriate
+        # Redirects to the market once a stock is bought
+        return redirect(url_for('market')) 
     
     return render_template("buy_stock.html", stock=stock)
 
 @app.route("/sell-stock/<int:stock_id>", methods=["GET", "POST"])
 @login_required
 def sell_stock(stock_id):
+    # Queries the Stock table and retreives the stock_id
     stock = Stock.query.get(stock_id)
     
+    # If statement to only run the below code if the form is submitted 
     if request.method == "POST":
+        # Retrieves the volume from the form used to sell stock. Form is specefied in the sell_stock.html
         volume_to_sell = request.form.get('volume', type=int)  
 
+        # If market isn't open then redirect back to the portfolio page and then flash error message
         if not market_open():
             flash("Sorry, market is closed. Try again once the market is open", "danger")
             return redirect(url_for('portfolio'))
         
+        # Queries the user stock and filters by the user id and stock id 
         user_stock = UserStock.query.filter_by(user_id=current_user.id, stock_id=stock_id).first()
-        
-        if not user_stock or user_stock.volume < volume_to_sell:
-            return "Insufficient stock volume to sell", 400
 
+        # Current price is the stocks current price
         current_price = stock.current_price
+        # calculates the sell value based on the stocks current price and the volume the user is selling
         sell_value = current_price * Decimal(volume_to_sell)
 
         # Update user's cash account balance
@@ -364,24 +397,16 @@ def sell_stock(stock_id):
         if user_stock.volume == 0:
             db.session.delete(user_stock)
         
-        # Record the transaction
-        new_transaction = Transaction(
-            user_id=current_user.id,
-            stock_id=stock_id,
-            transaction_type='sell',
-            volume=volume_to_sell,
-            price_at_transaction=current_price,
-            funds=sell_value
-        )
+        # Record the transaction in the Transaction database
+        new_transaction = Transaction( user_id=current_user.id, stock_id=stock_id, transaction_type='sell', volume=volume_to_sell, price_at_transaction=current_price, funds=sell_value)
         db.session.add(new_transaction)
+        # Subtracts volume from the stock 
         stock.volume -= volume_to_sell
         db.session.commit()
 
         return redirect(url_for('portfolio')) 
     
     return render_template("sell_stock.html", stock=stock)
-
-
 
 #Route 4 (page 4) admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
@@ -469,34 +494,40 @@ def change_hours():
 def portfolio():
     # prints the user id of the user that is signed in. Used for testing outputs in the terminal
     print("Current User ID:", current_user.id)
-    # Sets the variable cash_account to query the Cash_Account table in the database and retrieves all the values in the row
+    # Queries the Cash_Account table to retrieve the cash account that is associated with the signed in user and assigns it to the cash_account variable. Uses the user_id to filter the table.
     cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
-    # Initializes the balance to 0 before using it 
+    # Initializes the balance variable, if a cash account already exists use the cash account balance, but if no cash account yet set the balance to 0
     balance = cash_account.balance if cash_account else 0
 
-    # Queries the users stocks filtering by their user id
+    # Queries the UserStock table to retrieve the stocks that are associated with the signed in user
     user_stocks = UserStock.query.filter_by(user_id=current_user.id).all()
 
+    # Creates and empty list to store the portfolio items
     portfolio_items = []
+    # Loops through all the user's stock to retrieve the stock details and the transactions associated with the stock
     for user_stock in user_stocks:
+        # Queries the Stock table to get the stocks based on the stock_id
         stock = Stock.query.get(user_stock.stock_id)
+        # Queries the Transaction table to find the first buy transaction for the current stock
         transaction = Transaction.query.filter_by(user_id=current_user.id, stock_id=stock.stock_id, transaction_type='buy').first()
+        # If the stock already exists in the Transaction table then append the stock and transaction information to the portfolio items list
         if stock and transaction:
             portfolio_items.append({
-                'stock': stock,
-                'volume': user_stock.volume, 
-                'total_value': stock.current_price * user_stock.volume,
-                'transaction_id': transaction.transaction_id
+                'stock': stock, #Stores the stock object
+                'volume': user_stock.volume, #Stores the stock volume that is owned by the user
+                'total_value': stock.current_price * user_stock.volume, #Calculates the total value of the stock based on the current price and the volume of stock
+                'transaction_id': transaction.transaction_id #Stores the transaction id
             })
 
-    # Form for adding cash to cash account
+    # Creating the instance of the forms used for adding and withdrawing funds
     add_form = AddFunds()
     withdraw_form = WithdrawFunds()
 
-    # If statement for the add_form
+    # If statement to handel the form submission for adding funds to the users cash accoount
     if add_form.validate_on_submit() and add_form.add_submit.data:
         # Prints the cash accout id, user id, and the users current balance for. Used for testing outputs in the terminal
         # print("Cash Account:", cash_account.cashAccount_id, cash_account.user_id, cash_account.balance)
+
         # If a cash account already exists for a user it will add the cash to their current balance
         if cash_account:
             # adding to the cash accout balance
@@ -504,17 +535,21 @@ def portfolio():
         # If a cash account does not already exists for a user it will create the cash account and add the initial funds
         else:
             cash_account = Cash_Account(user_id=current_user.id, balance=Decimal(add_form.add_balance.data))
-            # Adds the users cash accout to the database
+            # Adds a new cash account to the database
             db.session.add(cash_account)
 
+        # Creating a fund transaction record for adding funds to acount
         fund_transaction = FundTransaction(
             user_id=current_user.id,
             transaction_type='add',
             amount=Decimal(add_form.add_balance.data)
         )
+        # Adds the fund transaction to the database
         db.session.add(fund_transaction)
 
+        # Commits all changes to the database
         db.session.commit()
+        # Redirects back to the portfolio page after adding funds
         return redirect(url_for('portfolio'))
 
     # elif statement for the withdraw form
@@ -539,7 +574,7 @@ def portfolio():
     # Queries the transaction table for only the user that is currently signed in by filtering by the user id
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
 
-    # Prepares the transaction datat to be used on the portfolio.html page
+    # Prepares the transaction data to be used on the portfolio.html page
     transaction_data = []
     for transaction in transactions:
         stock = Stock.query.get(transaction.stock_id)
@@ -574,7 +609,6 @@ def account():
         # Adds the user to the database and commits
         db.session.add(new_user)
         db.session.commit()
-        flash('User created successfully!')
         return redirect(url_for('home'))
     return render_template('account.html', form=form)
 
@@ -598,7 +632,6 @@ def admin_account():
         # Adds the user to the datbase and commits
         db.session.add(new_user)
         db.session.commit()
-        flash('User created successfully!')
         # Will redirect the user back to the admin_market page after submitting
         return redirect(url_for('admin_market'))
     return render_template('admin_account.html', form=form)
@@ -609,6 +642,5 @@ def admin_account():
 def logout():
     # logs the user out
     logout_user()
-    flash('You have been logged out.', 'info')
     # redirects to the home page if signed out
     return redirect(url_for('home'))
