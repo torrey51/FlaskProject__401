@@ -67,23 +67,13 @@
     <div class="form-container">
       <form method="POST" action=""> 
         {{ form.hidden_tag() }} 
-        <!-- Input field for adding opening day -->
         <p class="form-title">{{ form.open_day.label }}<br>{{ form.open_day() }}</p>
-
-        <!-- Input field for adding the closing day -->
         <p class="form-title">{{ form.close_day.label }}<br>{{ form.close_day() }}</p>
-
-        <!-- Input field for the opening hour -->
         <p class="form-title">{{ form.open_hour.label }}<br>{{ form.open_hour() }}</p>
-
-        <!-- Input field for the closing hour -->
         <p class="form-title">{{ form.close_hour.label }}<br>{{ form.close_hour() }}</p>
-
-        <!-- Submit button -->
         <p class="form-title">{{ form.submit() }}</p>
       </form>
     </div>
-    <!-- Link to go back to the admin market page -->
     <p class="admin-back"><a class="admin" href="{{ url_for('admin_market') }}">Back to admin market</a></p>
   </body>
 

@@ -1,4 +1,5 @@
-{% extends 'base.html' %} {% block title %}Market{% endblock %} {% block content%}
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content
+  %}
   
   <style>
     /* CSS to change body of the admin market page*/
@@ -82,32 +83,20 @@
       font-family: Clock;
     }
 
-    button {
-      border: none;
-      background-color: black;
-      color: white;
-      padding-bottom: 5px;
-      font-weight: bold;
-    }
   </style>
   
   <body>
-    <!-- Displays the market hours above the stock market table, shows the most recent market hour update -->
     {% if last_hour %}
     <p class="market-hours">Market Hours: {{ last_hour.open_day }}-{{ last_hour.close_day }} {{ last_hour.open_hour }}am-{{ last_hour.close_hour }}pm</p>
     {% else %}
-    <!-- If there are not market hours in the table then this message will be displayed -->
     <p>No market hours available</p>
     {% endif %}
-
-    <!-- Flashes a message that the stock market hours have been added -->
+    <!-- Flashes the messages stated in the app.py file -->
     {% with messages = get_flashed_messages() %} {% if messages %}
     <ul> {% for message in messages %}
       <li class="message">{{ message }}</li>
       {% endfor %}
     </ul> {% endif %} {% endwith %}
-    
-    <button onclick="window.location.reload();">Refresh Market Table <i class="fa fa-refresh" style="color:#00c805;"></i></button>
     <!-- Container for the stock table -->
     <div class="table-container">
       <!-- Table for the stocks, pulls value from the database to populate the table -->
@@ -120,8 +109,6 @@
             <th>Current Price</th>
             <th>Volume</th>
             <th>Market Capitalization</th>
-            <th>Daily High</th>
-            <th>Daily Low</th>
             <th>Purchase Stock</th>
           </tr>
         </thead>
@@ -144,15 +131,9 @@
             <!-- Cell is calculate in the .py file multiplying the volume and the current price to get the market capitalization -->
             <td class="stock-rows">{{ stock.market_capitalization }}</td>
 
-            <!-- Cell for showing the daily high stock price-->
-            <td class="stock-rows">{{ stock.daily_high}}</td>
-
-            <!-- Cell for showing the daily low stock price -->
-            <td class="stock-rows">{{ stock.daily_low}}</td>
-
             <!-- Links for deleting and edting the stocks in the stock table -->
             <td> 
-              <a class="buy" href="{{ url_for('buy_stock', stock_id=stock.stock_id) }}">Buy</a>
+              <a class="buy" href="{{ url_for('buy_stock', id=stock.stock_id) }}">Buy</a>
             </td>
           </tr> {% else %} 
           <tr>
@@ -163,4 +144,4 @@
     </div>
   </body>
   
-{% endblock %}
+  {% endblock %}
