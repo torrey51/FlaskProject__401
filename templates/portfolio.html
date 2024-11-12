@@ -1,65 +1,269 @@
-{% extends 'home.html' %}
-{% block content %}
-<div class="container mt-5">
-    <h1>Portfolio</h1>
+{% extends 'base.html' %} {% block title %}Portfolio{% endblock %} {% block content%}
 
-    <h3>Account Balance</h3>
-    <p>Your current balance: <span id="account-balance">${{ balance }}</span></p>
+<style>
+
+    body {
+        background: black;
+    }
+
+    p {
+        color: white;
+    }
+
+    label {
+        color: white;
+    }
+    
+      /* CSS for the admin stock market title, alinging in the center and bolding */
+    h1 {
+        text-align: center;
+        font-weight: bold;
+        color: white;
+    }
+
+    h3 {
+        font-weight: bold;
+        color: white;
+        padding-top: 15px
+    }
+
+    table {
+      color: white;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    /* CSS for the titles in the stock markert table */
+    tr th {
+      padding: 10px;
+      color:#00c805;
+      font-family: Roboto
+    }
+
+
+    /* CSS for adding lines in the table */
+    th, td {
+      border: solid white;
+      font-family: Roboto;
+    }
+
+    /* CSS for the rows in the stock market table*/
+    .fund-rows{
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    .table-container {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* CSS for the edit and delete buttons */
+    td a {
+      text-decoration: none;
+      background-color: #00c805;
+      display: block;
+      color: black;
+      font-weight: bold;
+      width: 100%;
+      height: 100%;
+      padding: 10px 0px;
+      box-sizing: border-box;
+    }
+
+    .fixedTableHead {
+        overflow-y: auto;
+        max-height: 500px;
+        border: solid white;
+    }
+
+    .fixedTableHead table {
+        width: 100%;
+    }
+
+    .fixedTableHead thead th{
+        position: sticky;
+        top: 0;
+        background-color: black;
+        z-index: 10;
+        border-bottom: solid white;
+    }
+
+    .fixedTableHead thead {
+        background: black;
+        z-index: 1;
+    }
+
+    .username {
+        font-family: Moul;
+        font-size: 75px;
+        font-weight: normal;
+    }
+
+    h3 {
+        font-family: BebasNeue;
+        font-size: 50px;
+        font-weight: normal;
+    }
+
+    p {
+        font-size: 25px;
+        font-family: Roboto;
+        margin: 0;
+    }
+
+    .form-label {
+        font-family: Roboto;
+        font-size: 25px;
+    }
+</style>
+
+<script>
+    // Displays a confirmation message when the submit button is clicked
+    function confirmAdd() {
+        return confirm("Are you sure you want to add funds?");
+    }
+
+    // Displays a confirmation message when the submit button is clicked
+    function confirmWithdraw() {
+    return confirm("Are you sure you want to withdraw funds?");
+    }
+</script>
+
+<div class="container mt-5">
+    <h1 class="username">{{ current_user.username }}'s Portfolio</h1>
+
+    <h3 class="balance">Account Balance</h3>
+    <!-- Displays the logged in users balance on the webpage -->
+    <p>Current balance: <span style="font-weight: bold; color:#00c805;" id="account-balance">${{ balance }}</span></p>
 
     <!--Add funds button/section -->
     <h3>Add Funds</h3>
-    <form method="POST" action="/add-funds">
+    <form method="POST" action="">
+        {{ add_form.hidden_tag() }}
+
         <div class="form-group">
-            <label for="amount">Enter amount:</label>
-            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+            <label for="addFunds" class="form-label">Enter amount:</label>
+            {{ add_form.add_balance(class="form-control", id="addFunds") }}
         </div>
-        <button type="submit" class="btn btn-success mt-2">Add Funds</button>
+        {{ add_form.add_submit(class="btn btn-success mt-2", onclick="return confirmAdd();") }}
     </form>
 
     <!--Withdraw funds button/section-->
     <h3>Withdraw Funds</h3>
-    <form method="POST" action="/withdraw-funds">
+    <form method="POST" action="">
+        {{ withdraw_form.hidden_tag() }}
+
         <div class="form-group">
-            <label for="withdraw-amount">Enter amount:</label>
-            <input type="number" step="0.01" class="form-control" id="withdraw-amount" name="withdraw_amount" required>
+            <label for="withdrawFunds" class="form-label">Enter amount:</label>
+            {{ withdraw_form.withdraw_balance(class="form-control", id="withdrawFunds") }}
         </div>
-        <button type="submit" class="btn btn-danger mt-2">Withdraw Funds</button>
+        {{ withdraw_form.withdraw_submit(class="btn btn-danger mt-2", onclick="return confirmWithdraw();") }}
     </form>
 
-    <!--Active Stocks (not connected to a database)-->
+    <!--Active Stocks-->
     <h3>Active Stocks</h3>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>Stock</th>
-                <th>Quantity</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for stock in stocks %}
-            <!-- database -->
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stock</th>
+                    <th>Volume</th>
+                    <th>Total Value</th>
+                    <th>Sell</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Gets the items from the portfolio_items list -->
+                {% for item in portfolio_items %}
+                <tr class="fund-rows">
+                    <!-- Retrieves the stock name and ticker symbol -->
+                    <td class="fund-rows">{{ item.stock.company_name }} ({{ item.stock.ticker_symbol }})</td>
+                    <!-- Retreives the volume of stock owned by the user -->
+                    <td class="fund-rows">{{ item.volume }}</td>
+                    <!-- Retreives the total value of the stock. volume * current stock price -->
+                    <td class="fund-rows">{{ item.total_value }}</td>
+                    <!-- Route to the sell stock page -->
+                    <td> 
+                        <a class="sell" href="{{ url_for('sell_stock', stock_id=item.stock.stock_id) }}">Sell</a>
+                    </td>
+                </tr>{% else %}
+                <tr>
+                    <td colspan="4">No Stocks Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <!--Transaction history(not connected to a database)-->
-    <h3>Transaction History</h3>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Stock</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transaction in transactions %}
-            <!-- database -->
-            {% endfor %}
-        </tbody>
-    </table>
+    <!--Transaction history for users adding and withdrawing funds-->
+    <h3>Funds History</h3>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Transaction Type</th>
+                    <th>Amount</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Gets the fund trasnactions from the fund transactions table -->
+                {% for fund_transactions in fund_transactions %}
+                <tr class="fund-rows">
+                    <!-- Displays if the transaction type was adding or withdrawing funds -->
+                    <td class="fund-rows">{{ fund_transactions.transaction_type }}</td>
+                    <!-- Displays the cash amount of the transaction  -->
+                    <td class="fund-rows">{{ fund_transactions.amount }}</td>
+                    <!-- Displays when the transaction took place -->
+                    <td class="fund-rows">{{ fund_transactions.timestamp }}</td>
+                </tr> {% else %}
+                <tr>
+                    <td colspan="4">No Fund Transaction History Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!--Transaction history for users buying and selling stocks-->
+    <h3>Stock Transaction History</h3>
+    <div class="fixedTableHead">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stock Name</th>
+                    <th>Transaction Type</th>
+                    <th>Volume</th>
+                    <th>Price at Transaction</th>
+                    <th>Amount Spent</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Retrieves the transaction from the transaction_data list -->
+                {% for transaction in transaction_data %}
+                <tr class="fund-rows">
+                    <!-- Retreives the name of the stock bought or sold -->
+                    <td class="fund-rows">{{ transaction.stock_name }}</td>
+                    <!-- Retreives the transaction type buy or sell -->
+                    <td class="fund-rows">{{ transaction.transaction_type }}</td>
+                    <!-- Retreives the volume of stock bought or sold -->
+                    <td class="fund-rows">{{ transaction.volume }}</td>
+                    <!-- Retreives the stocks price at the transaction bought or sold -->
+                    <td class="fund-rows">{{ transaction.price_at_transaction }}</td>
+                    <!-- Retreives the total amount of cash for buying or selling a stock -->
+                    <td class="fund-rows">{{ transaction.funds }}</td>
+                    <!-- Retreives the time when the stock was bought or sold -->
+                    <td class="fund-rows">{{ transaction.timestamp }}</td>
+                </tr> {% else %}
+                <tr>
+                    <td colspan="4">No Stock Transaction History Found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

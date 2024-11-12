@@ -1,27 +1,137 @@
 {% extends 'base.html' %}
-{% block title %}Sell Stock{% endblock %}
+{% block title %}Sell Stock{% endblock %} {% block content %}
+<style>
+    /* CSS for the p element that contains the admin back button */
+    .portfolio-back{
+        padding-top: 30px;
+        text-align:center;
+    }
+  
+      /* CSS for the back to admin stock market hyperlink button */
+    .portfolio{
+        text-decoration: none;
+        border: solid;
+        border-radius: 25px;
+        padding: 5px;
+        background-color:#00c805; 
+        color: black;
+        font-weight: bold;
+    }
+  
+    /* CSS for when the back to admin stock market hyperlinked is hovered */
+    .portfolio:hover {
+        background-color:black; 
+        border-color: white;
+        color: white;
+    }
+  
+    form {
+        display: flex;
+    }
 
-{% block content %}
+    .form-container {
+      display: flex;
+      justify-content: center;
+    }
+  
+    .alert {
+      text-align: center;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  
+    .price {
+    font-family: Roboto;
+    font-weight: bold;
+    }
+
+    h2 {
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      font-family: Roboto;
+    }
+  
+    h3{
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      font-family: Roboto;
+    }
+
+    #total_sell {
+        color:#00c805;
+    }
+
+    #sell {
+    background-color: #00c805;
+    margin-left: 10px;
+    border: none;
+    color: black;
+    font-weight: bold;
+    border: solid black;
+    }
+
+    #sell:hover{
+        background-color: black;
+        color: white;
+        border: solid white;
+    }
+  </style>
 
 <script>
     // Displays a confirmation message when the submit button is clicked
     function confirmSubmit() {
         return confirm("Are you sure you want to sell this amount of stock?");
     }
+
+    // Creating a const variable to store the stocks current price
+    const stockPrice = {{ stock.current_price }};  
+
+    // Creating a const variable to store the stocks price at transaction. So the price it was bought at
+    const priceAtTransaction= {{ transaction.price_at_transaction }};
+
+    // Function for calculating the total cost based on the current stock price and volume that is selected in the buy form
+    function calculate() {
+        // Creates a const variable to store the volume that entered in the buy stock form 
+        const volume = document.getElementById("volume").value;
+        // Creates a const variable to multiple the stock volume by the stocks current price, maxes it out to two decimal places
+        const totalCost = (volume * stockPrice).toFixed(2);
+        // updates the html elements with the id total_cost to show the calculated total cost
+        document.getElementById("total_sell").textContent = totalCost;
+
+        // Creates a const variable that multiples the volume by the current stock price and then subtracts it from the price at transaction multiplied by the volume
+        const profit = ((volume * stockPrice) - (priceAtTransaction * volume)).toFixed(2);
+        // updates the html elements with the id total_profit to show the calculated profit from selling the stocks
+        document.getElementById("total_profit").textContent = profit
+    }
   </script>
 
 <!-- Creates a header with the name of the stock -->
 <h1>Sell {{ stock.company_name }} Stock</h1>
+<h1 class="price">Current Price: {{ stock.current_price }}</h1>
+<h2>{{ current_user.username }} Current Balance: <span style="color:#00c805;">{{ balance }}</span></h2>
+<h3>Total Sell Price: <span id="total_sell">0.00</span></h3>
+<h3>Profit: <span id="total_profit">0.00</span></h3>
+
+<!-- Div element to display the buy stock error message and is dismissible. https://getbootstrap.com/docs/4.0/components/alerts/ -->
+    {% if sell_error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"> 
+        {{ sell_error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
 <div class="form-container">
     <form action="{{ url_for('sell_stock', stock_id=stock.stock_id) }}" method="POST">
         <!-- Hidden input field to retrieve the stock id -->
         <input type="hidden" name="stock_id" value="{{ stock.id }}">
         <!-- Input field to select the amount of stock to sell minumum is set to 1 -->
-        <input type="number" name="volume" min="1" required>
+        <input type="number" class="form-control" id="volume" name="volume" min="1" required oninput="calculate()">
         <!-- Button to submit the sell form -->
-        <button onclick="return confirmSubmit();", type="submit">Sell</button>
+        <button id="sell" class="btn btn-primary" onclick="return confirmSubmit();", type="submit">Sell</button>
     </form>
 </div>
 <!-- After submitting user will be redirected back to the portfolio page -->
-<p class="back"><a href="{{ url_for('portfolio') }}">Back to Portfolio</a></p>
+<p class="portfolio-back"><a class="portfolio" href="{{ url_for('portfolio') }}">Back to Portfolio</a></p>
 {% endblock %}
