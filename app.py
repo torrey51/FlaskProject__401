@@ -320,8 +320,13 @@ def buy_stock(stock_id):
     # Queries the Stock table and retreives the stock_id
     stock = Stock.query.get(stock_id)
     buy_error = None
+    hour_error = None
     cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
     balance = cash_account.balance
+
+    # Queries the stocks and last_hour to be used to re-generate the page for the hour_error
+    stocks = Stock.query.all()
+    last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     
     # If statement to only run the below code if the form is submitted 
     if request.method == "POST":
@@ -330,15 +335,15 @@ def buy_stock(stock_id):
 
         # If the market is not open then flash message and return to market page
         if not market_open():
-            flash("Sorry, market is closed due to either holiday or outside of current market hours. Try again once the market is open.", "danger")
-            return redirect(url_for('market'))
+            hour_error = "Sorry, market is currently closed due to holiday or because it is outside of the market hours. Try again once the market is open."
+            return render_template('market.html', hour_error=hour_error, stocks=stocks, last_hour=last_hour)
         
         # total cost of stock is current price of the stock multiplied by the volume you are buying at 
         total_cost = stock.current_price * Decimal(volume)
 
         # If the user doesn't have enough available cash redirect to market page and flash insufficient funds message
         if current_user.cash_account.balance < total_cost:
-            buy_error = "Sorry, you don't have sufficient funds to purchase stock. Check your current balance and try again:"
+            buy_error = "Oops, looks like you don't have enough funds to purchase stock. Try again after adding more funds to account or selecting a lower volume to purchase."
             return render_template('buy_stock.html', stock=stock, buy_error=buy_error, balance=balance)
         
         # Get the users cash account balance and subtract the total cost 
@@ -368,7 +373,7 @@ def buy_stock(stock_id):
         # Redirects to the market once a stock is bought
         return redirect(url_for('market')) 
     
-    return render_template("buy_stock.html", stock=stock, buy_error=buy_error, balance=balance, current_user=current_user)
+    return render_template("buy_stock.html", stock=stock, buy_error=buy_error, balance=balance, current_user=current_user, hour_error=hour_error)
 
 @app.route("/sell-stock/<int:stock_id>", methods=["GET", "POST"])
 @login_required
@@ -377,10 +382,16 @@ def sell_stock(stock_id):
     stock = Stock.query.get(stock_id)
     # Sets the sell error to none to initialize 
     sell_error = None
+    # Sets the hour error to nont to initialize
+    hour_error = None
     # Queries the cash account by the current user id
     cash_account = Cash_Account.query.filter_by(user_id=current_user.id).first()
     # Sets the balance variable to the current balance in the user cash account
     balance = cash_account.balance
+
+    # Queries the stocks and last_hour to be used to re-generate the page for the hour_error
+    stocks = Stock.query.all()
+    last_hour = Hours.query.order_by(Hours.hour_id.desc()).first()
     
     # Queriers the transaction table to get the most recent transaction for the user and the stock they are selling
     transaction = Transaction.query.filter_by(user_id=current_user.id, stock_id=stock_id).order_by(Transaction.transaction_id.desc()).first()
@@ -390,10 +401,10 @@ def sell_stock(stock_id):
         # Retrieves the volume from the form used to sell stock. Form is specefied in the sell_stock.html
         volume_to_sell = request.form.get('volume', type=int)  
 
-        # If market isn't open then redirect back to the portfolio page and then flash error message
+        # If the market is not open then flash message and return to market page
         if not market_open():
-            flash("Sorry, market is closed due to either holiday or outside of current market hours. Try again once the market is open.", "danger")
-            return redirect(url_for('market'))
+            hour_error = "Sorry, market is currently closed because it is either a holiday are it is outside of the market hours. Try again once the market is open."
+            return render_template('market.html', hour_error=hour_error, stocks=stocks, last_hour=last_hour)
         
         # Queries the user stock and filters by the user id and stock id 
         user_stock = UserStock.query.filter_by(user_id=current_user.id, stock_id=stock_id).first()
@@ -425,7 +436,7 @@ def sell_stock(stock_id):
 
         return redirect(url_for('portfolio')) 
     
-    return render_template("sell_stock.html", stock=stock, sell_error=sell_error, balance=balance, transaction=transaction)
+    return render_template("sell_stock.html", stock=stock, sell_error=sell_error, balance=balance, transaction=transaction, hour_error=hour_error)
 
 #Route 4 (page 4) admin market page
 @app.route('/admin_market', methods=["GET", "POST"])
@@ -433,7 +444,6 @@ def sell_stock(stock_id):
 def admin_market():
     # Checks if the current user is an admin or not. Will only let admins view the admin market pages. redirects the users to the market if not an admin
     if current_user.user_type != 'admin':
-        flash('Access denied!', 'danger')
         return redirect(url_for('market'))
     
     stocks = Stock.query.all()

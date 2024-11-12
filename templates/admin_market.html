@@ -118,12 +118,6 @@
     {% else %}
       <p>No market hours available</p>
     {% endif %}
-    <!-- Flashes the messages stated in the app.py file -->
-    {% with messages = get_flashed_messages() %} {% if messages %}
-    <ul> {% for message in messages %}
-      <li class="message">{{ message }}</li>
-      {% endfor %}
-    </ul> {% endif %} {% endwith %}
     <!-- Creating the link for the add stock page -->
      <div class="change-buttons">
       <p style="text-align: center;"><a class="add" href="{{ url_for('add_stock') }}">Add New Stock</a></p>

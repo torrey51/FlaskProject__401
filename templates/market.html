@@ -91,6 +91,18 @@
       padding-bottom: 5px;
       font-weight: bold;
     }
+
+    p {
+        font-size: 25px;
+        font-family: Roboto;
+        margin: 0;
+    }
+
+    .alert {
+    text-align: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    }
   </style>
   
   <body>
@@ -102,12 +114,13 @@
     <p>No market hours available</p>
     {% endif %}
 
-    <!-- Flashes a message that the stock market hours have been added -->
-    {% with messages = get_flashed_messages() %} {% if messages %}
-    <ul> {% for message in messages %}
-      <li style="color: red;" class="message">{{ message }}</li>
-      {% endfor %}
-    </ul> {% endif %} {% endwith %}
+    <!-- Div element to display the buy stock error message and is dismissible. https://getbootstrap.com/docs/4.0/components/alerts/ -->
+    {% if hour_error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ hour_error }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
     
     <button style="font-family: Roboto;" onclick="window.location.reload();">Refresh Market Table <i class="fa fa-refresh" style="color:#00c805;"></i></button>
     <!-- Container for the stock table -->
