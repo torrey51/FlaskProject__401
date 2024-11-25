@@ -96,7 +96,11 @@ def reset_daily_price():
 # Creates the scheduler 
 sched = BackgroundScheduler(timezone=timezone('America/Phoenix'), daemon=True)
 # runs the fluctuate_price function every 5 minutes. Using interval to specify when to fluctuate the prices.
+<<<<<<< HEAD
 sched.add_job(fluctuate_price, 'interval', minutes=5)
+=======
+sched.add_job(fluctuate_price, 'interval', minutes=1)
+>>>>>>> d4649a1 (Adding finished files)
 # Runs the reset_daily_price function at midnight everyday. Using cron to specify the certain time of day I want it to run
 sched.add_job(reset_daily_price, 'cron', hour=0, minute=0)
 # Starts the scheduler
